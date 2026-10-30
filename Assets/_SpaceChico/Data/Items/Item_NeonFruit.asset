@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: Item_NeonFruit
+  m_EditorClassIdentifier: Assembly-CSharp:SpaceChico:ItemData
+  id: Item_NeonFruit
+  displayName: Fruto de Neon
+  description: "Esp\xE9cime vegetal alien\xEDgena que restaura 1 ponto de vida ou
+    oxig\xEAnio."
+  icon: {fileID: 21300000, guid: 5ffdf01a75fd3f54d83cbc4927aab372, type: 3}
+  category: 2
+  power: 0
+  powerDuration: 0
+  accent: {r: 0.2, g: 1, b: 0.5, a: 1}
