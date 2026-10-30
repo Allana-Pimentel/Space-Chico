@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 1946299373509557093}
   - component: {fileID: 4492077037695779273}
   - component: {fileID: 693827928690043793}
-  - component: {fileID: 6723360514864097241}
+  - component: {fileID: 8884825281028164871}
   m_Layer: 13
   m_Name: Pickup_ShipPart
   m_TagString: Untagged
@@ -157,7 +157,7 @@ MonoBehaviour:
   itemData: {fileID: 11400000, guid: 19b60dd23b7366248a73f98600ee41cd, type: 2}
   glowColor: {r: 0.2, g: 0.9, b: 1, a: 1}
   visualObject: {fileID: 2922770909688993549}
---- !u!114 &6723360514864097241
+--- !u!114 &8884825281028164871
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -182,7 +182,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8101568282965800229}
   - component: {fileID: 4511180029315172551}
-  - component: {fileID: 345863496124348077}
+  - component: {fileID: 5649828371329229027}
   m_Layer: 0
   m_Name: HaloGlow
   m_TagString: Untagged
@@ -265,7 +265,7 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
   m_BlendShapeWeights: []
---- !u!114 &345863496124348077
+--- !u!114 &5649828371329229027
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

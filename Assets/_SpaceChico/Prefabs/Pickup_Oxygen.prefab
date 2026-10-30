@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 863465329030857921}
   - component: {fileID: 7266854729071679948}
   - component: {fileID: 4479695664403050096}
-  - component: {fileID: 6119829593801603332}
+  - component: {fileID: 5258992722729629907}
   m_Layer: 13
   m_Name: Pickup_Oxygen
   m_TagString: Untagged
@@ -147,7 +147,7 @@ MonoBehaviour:
   value: 30
   powerItemData: {fileID: 0}
   burstColor: {r: 0.3, g: 0.8, b: 1, a: 1}
---- !u!114 &6119829593801603332
+--- !u!114 &5258992722729629907
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

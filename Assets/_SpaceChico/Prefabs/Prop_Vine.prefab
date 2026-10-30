@@ -87,8 +87,8 @@ SpriteRenderer:
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
-  m_DrawMode: 0
-  m_Size: {x: 1.65, y: 6.04}
+  m_DrawMode: 2
+  m_Size: {x: 0.8, y: 6.2}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -133,12 +133,12 @@ BoxCollider2D:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
     oldSize: {x: 1.65, y: 6.04}
-    newSize: {x: 1.65, y: 6.04}
+    newSize: {x: 0.8, y: 6.2}
     adaptiveTilingThreshold: 0.5
-    drawMode: 0
+    drawMode: 2
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 0.7, y: 5}
+  m_Size: {x: 0.8, y: 6.2}
   m_EdgeRadius: 0
 --- !u!114 &7558826116555812061
 MonoBehaviour:
@@ -152,5 +152,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 039d7c083e8c18449b450a3b7b886283, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpaceChico.Vine
-  topY: 2.5
-  bottomY: -2.5
+  topY: 3.1
+  bottomY: -3.1

@@ -83,6 +83,9 @@ namespace SpaceChico
         private Vine activeVine;
         private float hurtTimer;
         private float initialScaleX;
+        private float initialScaleY;
+        private float initialColliderHeight = 1.4f;
+        private float initialColliderOffsetY = 0.7f;
 
         public event Action<PlayerState> StateChanged;
 
@@ -100,6 +103,13 @@ namespace SpaceChico
             initialGravityScale = rb.gravityScale > 0 ? rb.gravityScale : 3.2f;
             rb.gravityScale = initialGravityScale;
             initialScaleX = Mathf.Abs(transform.localScale.x);
+            initialScaleY = transform.localScale.y;
+
+            if (mainCollider is CapsuleCollider2D capCol)
+            {
+                initialColliderHeight = capCol.size.y;
+                initialColliderOffsetY = capCol.offset.y;
+            }
 
             if (groundCheck == null)
             {
@@ -228,13 +238,13 @@ namespace SpaceChico
                 }
             }
 
-            // Interagir com Vinha (GDD Seção 4 e 7.1: Setas Cima/Baixo só no Idle ou já escalando)
+            // Interagir com Vinha (Setas Cima/Baixo ou W/S para agarrar e escalar)
             if (activeVine != null)
             {
                 float v = GameInput.Vertical;
-                if (Mathf.Abs(v) > 0.1f && (State == PlayerState.Idle || State == PlayerState.Climbing))
+                if (Mathf.Abs(v) > 0.1f)
                 {
-                    if (State != PlayerState.Climbing)
+                    if (State != PlayerState.Climbing && State != PlayerState.Hurt && State != PlayerState.Dead)
                     {
                         ChangeState(PlayerState.Climbing);
                     }
@@ -280,7 +290,8 @@ namespace SpaceChico
             if (Mathf.Abs(inputH) > 0.05f)
             {
                 Facing = Mathf.Sign(inputH);
-                transform.localScale = new Vector3(initialScaleX * Facing, transform.localScale.y, transform.localScale.z);
+                float currScaleY = State == PlayerState.Crouch ? initialScaleY * 0.7f : initialScaleY;
+                transform.localScale = new Vector3(initialScaleX * Facing, currScaleY, transform.localScale.z);
             }
 
             // Aceleração / Desaceleração horizontal fluida
@@ -323,10 +334,18 @@ namespace SpaceChico
 
             if (State == PlayerState.Climbing)
             {
-                // Se saiu da área da vinha, cai
+                // Se chegou ao topo (apoiado no chão) e anda para o lado ou pula, sai da escalada
+                if (IsGrounded && (Mathf.Abs(GameInput.Horizontal) > 0.1f || GameInput.Pressed(GameAction.Jump)))
+                {
+                    ChangeState(PlayerState.Idle);
+                    rb.gravityScale = initialGravityScale;
+                    return;
+                }
+
+                // Se saiu da área da vinha, cai ou fica em pé se estiver no chão
                 if (activeVine == null)
                 {
-                    ChangeState(PlayerState.Fall);
+                    ChangeState(IsGrounded ? PlayerState.Idle : PlayerState.Fall);
                     rb.gravityScale = initialGravityScale;
                 }
                 return;
@@ -365,7 +384,31 @@ namespace SpaceChico
         public void ChangeState(PlayerState newState)
         {
             if (State == newState) return;
+
+            // Restaura tamanho normal ao sair do agachado
+            if (State == PlayerState.Crouch && newState != PlayerState.Crouch)
+            {
+                transform.localScale = new Vector3(initialScaleX * Facing, initialScaleY, transform.localScale.z);
+                if (mainCollider is CapsuleCollider2D cap)
+                {
+                    cap.size = new Vector2(cap.size.x, initialColliderHeight);
+                    cap.offset = new Vector2(cap.offset.x, initialColliderOffsetY);
+                }
+            }
+
             State = newState;
+
+            // Aplica agachamento visual e reduz o tamanho da hitbox
+            if (State == PlayerState.Crouch)
+            {
+                transform.localScale = new Vector3(initialScaleX * Facing, initialScaleY * 0.7f, transform.localScale.z);
+                if (mainCollider is CapsuleCollider2D cap)
+                {
+                    cap.size = new Vector2(cap.size.x, initialColliderHeight * 0.6f);
+                    cap.offset = new Vector2(cap.offset.x, initialColliderOffsetY * 0.5f);
+                }
+            }
+
             StateChanged?.Invoke(newState);
         }
 

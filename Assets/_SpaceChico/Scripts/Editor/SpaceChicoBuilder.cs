@@ -560,10 +560,12 @@ namespace SpaceChico.Editor
             var sr = go.AddComponent<SpriteRenderer>();
             sr.sortingOrder = 18;
             sr.sprite = AssetDatabase.LoadAssetAtPath<Sprite>($"{ArtDir}/prop_vine.png");
+            sr.drawMode = SpriteDrawMode.Tiled;
+            sr.size = new Vector2(0.8f, 6.2f);
 
             var col = go.AddComponent<BoxCollider2D>();
             col.isTrigger = true;
-            col.size = new Vector2(0.7f, 5.0f);
+            col.size = new Vector2(0.8f, 6.2f);
 
             go.AddComponent<Vine>();
 
@@ -1217,23 +1219,31 @@ namespace SpaceChico.Editor
             // AudioManager
             new GameObject("AudioManager", typeof(AudioManager));
 
-            // Fundo com Parallax (múltiplos painéis ao longo da fase)
+            // Fundo com Parallax em Loop Infinito (3 painéis que formam uma esteira contínua)
             var bgParent = new GameObject("--- BACKGROUND PARALLAX ---");
+            bgParent.transform.position = new Vector3(0f, 4.5f, 5f);
+            var plxLoop = bgParent.AddComponent<ParallaxLoop>();
+            plxLoop.cam = camObj.transform;
+            plxLoop.parallaxFactor = 0.65f;
+
             Sprite bgSprite = AssetDatabase.LoadAssetAtPath<Sprite>($"{ArtDir}/bg_swamp_far.jpg");
-            float[] bgPositionsX = { -20f, -5f, 10f, 25f, 40f, 55f, 70f, 85f, 100f, 115f, 130f };
-            foreach (float posX in bgPositionsX)
+            float bgWidth = (bgSprite != null ? bgSprite.rect.width / bgSprite.pixelsPerUnit : 13.76f) * 1.6f;
+
+            var bgPanels = new SpriteRenderer[3];
+            for (int i = 0; i < 3; i++)
             {
-                var bgObj = new GameObject($"Background_{posX:F0}", typeof(SpriteRenderer), typeof(Parallax));
+                var bgObj = new GameObject($"Background_Panel_{i}", typeof(SpriteRenderer));
                 bgObj.transform.SetParent(bgParent.transform);
+                bgObj.transform.localScale = Vector3.one * 1.6f;
+                // Posiciona os 3 painéis lado a lado: -largura, 0, +largura
+                bgObj.transform.position = new Vector3((i - 1) * bgWidth, 4.5f, 5f);
+
                 var srBg = bgObj.GetComponent<SpriteRenderer>();
                 srBg.sprite = bgSprite;
                 srBg.sortingOrder = -50;
-                bgObj.transform.position = new Vector3(posX, 4.5f, 5f);
-                bgObj.transform.localScale = Vector3.one * 1.6f;
-                var plx = bgObj.GetComponent<Parallax>();
-                plx.cam = camObj.transform;
-                plx.factor = new Vector2(0.85f, 0.95f);
+                bgPanels[i] = srBg;
             }
+            plxLoop.panels = bgPanels;
 
             // Esporos no ar (Partículas)
             var spores = new GameObject("AmbientSpores", typeof(ParticleSystem), typeof(AmbientParticles));
@@ -1257,9 +1267,9 @@ namespace SpaceChico.Editor
             // Chão intermediário (X: 28 a 52)
             CreateGroundSection(levelRoot.transform, 28f, 52f, -1f, groundSprite);
 
-            // Vinha 1 (X: 42, Y: 1 a 6)
+            // Vinha 1 (X: 42, Y: 0 a 6.2 - alcança com folga o topo da plataforma em Y=5.5)
             var v1 = (GameObject)PrefabUtility.InstantiatePrefab(prefabs.vine, levelRoot.transform);
-            v1.transform.position = new Vector3(42f, 2.5f, 0f);
+            v1.transform.position = new Vector3(42f, 3.1f, 0f);
 
             // Plataforma alta 1 com Cristal e Pulo Duplo (X: 38 a 46, Y: 5.5)
             CreateFloatingPlatform(levelRoot.transform, 38f, 46f, 5.5f, groundSprite);
@@ -1283,9 +1293,13 @@ namespace SpaceChico.Editor
             // Parede direita limite da Arena (X: 123 a 127, Y: 10 descendo até -4)
             CreateGroundSection(levelRoot.transform, 123f, 127f, 10f, groundSprite, 14f);
 
-            // Vinha 2 (X: 74, Y: 1 a 7)
+            // Vinha 2 (X: 74, Y: 0 a 7.7 - alcança com folga o topo da plataforma em Y=6.8)
             var v2 = (GameObject)PrefabUtility.InstantiatePrefab(prefabs.vine, levelRoot.transform);
-            v2.transform.position = new Vector3(74f, 3.2f, 0f);
+            v2.transform.position = new Vector3(74f, 3.8f, 0f);
+            var v2Col = v2.GetComponent<BoxCollider2D>();
+            if (v2Col != null) v2Col.size = new Vector2(0.8f, 7.8f);
+            var v2Sr = v2.GetComponent<SpriteRenderer>();
+            if (v2Sr != null) { v2Sr.drawMode = SpriteDrawMode.Tiled; v2Sr.size = new Vector2(0.8f, 7.8f); }
 
             // Plataforma secreta alta com Fruto de Neon e Escudo (X: 72 a 80, Y: 6.8)
             CreateFloatingPlatform(levelRoot.transform, 72f, 80f, 6.8f, groundSprite);
@@ -1443,6 +1457,12 @@ namespace SpaceChico.Editor
             var col = go.AddComponent<BoxCollider2D>();
             col.size = new Vector2(width, height);
             col.offset = new Vector2(0f, -height * 0.5f);
+            col.usedByEffector = true;
+
+            // Plataforma semi-sólida (permite subir de baixo para cima e pisar no topo)
+            var effector = go.AddComponent<PlatformEffector2D>();
+            effector.useOneWay = true;
+            effector.surfaceArc = 170f;
 
             var sr = go.AddComponent<SpriteRenderer>();
             sr.sprite = sprite;
@@ -1468,6 +1488,12 @@ namespace SpaceChico.Editor
             var col = go.AddComponent<BoxCollider2D>();
             col.size = new Vector2(width, height);
             col.offset = new Vector2(0f, -height * 0.5f);
+            col.usedByEffector = true;
+
+            // Plataforma semi-sólida (permite subir de baixo para cima e pisar no topo)
+            var effector = go.AddComponent<PlatformEffector2D>();
+            effector.useOneWay = true;
+            effector.surfaceArc = 170f;
 
             var sr = go.AddComponent<SpriteRenderer>();
             sr.sprite = sprite;
