@@ -154,7 +154,7 @@ namespace SpaceChico
         {
             if (crystalsText != null)
             {
-                crystalsText.text = $"{count}";
+                crystalsText.text = $"◆ {count}";
             }
         }
 

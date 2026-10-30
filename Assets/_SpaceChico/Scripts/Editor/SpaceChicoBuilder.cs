@@ -625,27 +625,81 @@ namespace SpaceChico.Editor
             hudObj.transform.SetParent(go.transform, false);
             var hud = hudObj.AddComponent<HUD>();
 
-            // Hearts container (top-left)
+            // --- PLAYER STATUS CORNER PANEL (Canto Superior Esquerdo) ---
+            var cornerCard = new GameObject("PlayerStatusCard", typeof(RectTransform), typeof(Image), typeof(Outline));
+            cornerCard.transform.SetParent(hudObj.transform, false);
+            var rtCard = cornerCard.GetComponent<RectTransform>();
+            rtCard.anchorMin = new Vector2(0, 1);
+            rtCard.anchorMax = new Vector2(0, 1);
+            rtCard.pivot = new Vector2(0, 1);
+            rtCard.anchoredPosition = new Vector2(25, -25);
+            rtCard.sizeDelta = new Vector2(340, 135);
+
+            var imgCard = cornerCard.GetComponent<Image>();
+            imgCard.color = new Color(0.05f, 0.08f, 0.15f, 0.88f);
+
+            var outlineCard = cornerCard.GetComponent<Outline>();
+            outlineCard.effectColor = new Color(0.2f, 0.8f, 1f, 0.4f);
+            outlineCard.effectDistance = new Vector2(1.5f, -1.5f);
+
+            // Nome / Identificação do Jogador no topo do cartão
+            var nameBox = new GameObject("PlayerName", typeof(RectTransform), typeof(Text));
+            nameBox.transform.SetParent(cornerCard.transform, false);
+            var rtName = nameBox.GetComponent<RectTransform>();
+            rtName.anchorMin = new Vector2(0, 1);
+            rtName.anchorMax = new Vector2(0, 1);
+            rtName.pivot = new Vector2(0, 1);
+            rtName.anchoredPosition = new Vector2(16, -10);
+            rtName.sizeDelta = new Vector2(140, 24);
+            var txtName = nameBox.GetComponent<Text>();
+            txtName.font = russoFont;
+            txtName.fontSize = 17;
+            txtName.color = new Color(0.4f, 0.95f, 1f);
+            txtName.text = "CHICO";
+
+            // Cristais (Canto superior direito do cartão)
+            var crysBox = new GameObject("Crystals", typeof(RectTransform), typeof(Text));
+            crysBox.transform.SetParent(cornerCard.transform, false);
+            var rtCrys = crysBox.GetComponent<RectTransform>();
+            rtCrys.anchorMin = new Vector2(0, 1);
+            rtCrys.anchorMax = new Vector2(0, 1);
+            rtCrys.pivot = new Vector2(0, 1);
+            rtCrys.anchoredPosition = new Vector2(160, -10);
+            rtCrys.sizeDelta = new Vector2(90, 24);
+            var txtCrys = crysBox.GetComponent<Text>();
+            txtCrys.font = russoFont;
+            txtCrys.fontSize = 17;
+            txtCrys.color = new Color(0.85f, 0.55f, 1f);
+            txtCrys.text = "◆ 0";
+            hud.crystalsText = txtCrys;
+
+            // Hearts container (Linha 2 dentro do cartão)
             var heartsBox = new GameObject("HeartsContainer", typeof(RectTransform), typeof(HorizontalLayoutGroup));
-            heartsBox.transform.SetParent(hudObj.transform, false);
+            heartsBox.transform.SetParent(cornerCard.transform, false);
             var rtHearts = heartsBox.GetComponent<RectTransform>();
             rtHearts.anchorMin = new Vector2(0, 1);
             rtHearts.anchorMax = new Vector2(0, 1);
             rtHearts.pivot = new Vector2(0, 1);
-            rtHearts.anchoredPosition = new Vector2(30, -30);
-            rtHearts.sizeDelta = new Vector2(250, 48);
+            rtHearts.anchoredPosition = new Vector2(16, -40);
+            rtHearts.sizeDelta = new Vector2(230, 40);
+            var hlg = heartsBox.GetComponent<HorizontalLayoutGroup>();
+            hlg.spacing = 6;
+            hlg.childControlWidth = false;
+            hlg.childControlHeight = false;
+            hlg.childForceExpandWidth = false;
+            hlg.childForceExpandHeight = false;
             hud.heartsContainer = heartsBox.transform;
 
-            // Oxygen Bar
+            // Oxygen Bar (Linha 3 dentro do cartão)
             var o2Box = new GameObject("OxygenBar", typeof(RectTransform), typeof(Image));
-            o2Box.transform.SetParent(hudObj.transform, false);
+            o2Box.transform.SetParent(cornerCard.transform, false);
             var rtO2 = o2Box.GetComponent<RectTransform>();
             rtO2.anchorMin = new Vector2(0, 1);
             rtO2.anchorMax = new Vector2(0, 1);
             rtO2.pivot = new Vector2(0, 1);
-            rtO2.anchoredPosition = new Vector2(30, -85);
-            rtO2.sizeDelta = new Vector2(240, 22);
-            o2Box.GetComponent<Image>().color = new Color(0.1f, 0.1f, 0.15f, 0.75f);
+            rtO2.anchoredPosition = new Vector2(16, -92);
+            rtO2.sizeDelta = new Vector2(235, 22);
+            o2Box.GetComponent<Image>().color = new Color(0.1f, 0.14f, 0.22f, 0.9f);
 
             var o2Fill = new GameObject("Fill", typeof(RectTransform), typeof(Image));
             o2Fill.transform.SetParent(o2Box.transform, false);
@@ -656,7 +710,7 @@ namespace SpaceChico.Editor
             var imgFill = o2Fill.GetComponent<Image>();
             imgFill.type = Image.Type.Filled;
             imgFill.fillMethod = Image.FillMethod.Horizontal;
-            imgFill.color = new Color(0.2f, 0.8f, 1f);
+            imgFill.color = new Color(0.2f, 0.85f, 1f);
             hud.oxygenFillImage = imgFill;
 
             var o2Txt = new GameObject("O2Text", typeof(RectTransform), typeof(Text));
@@ -667,55 +721,48 @@ namespace SpaceChico.Editor
             rtO2Txt.sizeDelta = Vector2.zero;
             var txtO2 = o2Txt.GetComponent<Text>();
             txtO2.font = russoFont;
-            txtO2.fontSize = 15;
+            txtO2.fontSize = 13;
             txtO2.alignment = TextAnchor.MiddleCenter;
             txtO2.color = Color.white;
             txtO2.text = "O₂ 100%";
             hud.oxygenText = txtO2;
 
-            // Crystals Count
-            var crysBox = new GameObject("Crystals", typeof(RectTransform), typeof(Text));
-            crysBox.transform.SetParent(hudObj.transform, false);
-            var rtCrys = crysBox.GetComponent<RectTransform>();
-            rtCrys.anchorMin = new Vector2(0, 1);
-            rtCrys.anchorMax = new Vector2(0, 1);
-            rtCrys.pivot = new Vector2(0, 1);
-            rtCrys.anchoredPosition = new Vector2(30, -118);
-            rtCrys.sizeDelta = new Vector2(200, 30);
-            var txtCrys = crysBox.GetComponent<Text>();
-            txtCrys.font = russoFont;
-            txtCrys.fontSize = 20;
-            txtCrys.color = new Color(0.8f, 0.5f, 1f);
-            txtCrys.text = "◆ 0";
-            hud.crystalsText = txtCrys;
-
-            // Power Icon (top-right)
-            var pwrBox = new GameObject("PowerStatus", typeof(RectTransform), typeof(Image));
-            pwrBox.transform.SetParent(hudObj.transform, false);
+            // Power Icon slot (Lado direito do cartão de status)
+            var pwrBox = new GameObject("PowerStatus", typeof(RectTransform), typeof(Image), typeof(Outline));
+            pwrBox.transform.SetParent(cornerCard.transform, false);
             var rtPwr = pwrBox.GetComponent<RectTransform>();
-            rtPwr.anchorMin = new Vector2(1, 1);
-            rtPwr.anchorMax = new Vector2(1, 1);
-            rtPwr.pivot = new Vector2(1, 1);
-            rtPwr.anchoredPosition = new Vector2(-30, -30);
-            rtPwr.sizeDelta = new Vector2(64, 64);
-            pwrBox.GetComponent<Image>().color = new Color(0.12f, 0.12f, 0.2f, 0.85f);
+            rtPwr.anchorMin = new Vector2(1, 0.5f);
+            rtPwr.anchorMax = new Vector2(1, 0.5f);
+            rtPwr.pivot = new Vector2(1, 0.5f);
+            rtPwr.anchoredPosition = new Vector2(-14, 8);
+            rtPwr.sizeDelta = new Vector2(58, 58);
+            pwrBox.GetComponent<Image>().color = new Color(0.12f, 0.16f, 0.26f, 0.95f);
+            var pwrOutline = pwrBox.GetComponent<Outline>();
+            pwrOutline.effectColor = new Color(0.3f, 0.8f, 1f, 0.4f);
 
             var pwrIcon = new GameObject("Icon", typeof(RectTransform), typeof(Image));
             pwrIcon.transform.SetParent(pwrBox.transform, false);
             var rtIcon = pwrIcon.GetComponent<RectTransform>();
-            rtIcon.sizeDelta = new Vector2(50, 50);
+            rtIcon.anchorMin = new Vector2(0.5f, 0.5f);
+            rtIcon.anchorMax = new Vector2(0.5f, 0.5f);
+            rtIcon.pivot = new Vector2(0.5f, 0.5f);
+            rtIcon.anchoredPosition = Vector2.zero;
+            rtIcon.sizeDelta = new Vector2(46, 46);
             hud.powerIcon = pwrIcon.GetComponent<Image>();
 
             var pwrLabel = new GameObject("Label", typeof(RectTransform), typeof(Text));
-            pwrLabel.transform.SetParent(pwrBox.transform, false);
+            pwrLabel.transform.SetParent(cornerCard.transform, false);
             var rtLbl = pwrLabel.GetComponent<RectTransform>();
-            rtLbl.anchoredPosition = new Vector2(0, -50);
-            rtLbl.sizeDelta = new Vector2(140, 40);
+            rtLbl.anchorMin = new Vector2(1, 0);
+            rtLbl.anchorMax = new Vector2(1, 0);
+            rtLbl.pivot = new Vector2(1, 0);
+            rtLbl.anchoredPosition = new Vector2(-10, 8);
+            rtLbl.sizeDelta = new Vector2(66, 24);
             var txtLbl = pwrLabel.GetComponent<Text>();
             txtLbl.font = nunitoFont;
-            txtLbl.fontSize = 14;
-            txtLbl.alignment = TextAnchor.UpperCenter;
-            txtLbl.color = Color.white;
+            txtLbl.fontSize = 11;
+            txtLbl.alignment = TextAnchor.MiddleCenter;
+            txtLbl.color = new Color(0.8f, 0.9f, 1f, 0.85f);
             txtLbl.text = "Poder [F]";
             hud.powerLabel = txtLbl;
 
@@ -1212,7 +1259,7 @@ namespace SpaceChico.Editor
             var cam = camObj.GetComponent<Camera>();
             cam.orthographic = true;
             cam.orthographicSize = 6.0f;
-            cam.backgroundColor = new Color(0.05f, 0.03f, 0.09f);
+            cam.backgroundColor = new Color(0.04f, 0.05f, 0.12f);
             cam.clearFlags = CameraClearFlags.SolidColor;
             var follow = camObj.AddComponent<CameraFollow>();
 
