@@ -1,29 +1,42 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace SpaceChico
 {
-    // Abertura completa:
-    // 1. História do Chico subindo no espaço estilo Star Wars + Chico feliz na nave
-    // 2. Pane no motor e a nave do Chico rasgando a tela em alta velocidade
-    // 3. Queda da nave e do Chico no Pântano Bioluminescente
+    // Abertura animada:
+    // 1. Espaço estrelado com a história do Chico subindo em estilo Star Wars
+    // 2. A nave do Chico entra voando e CORTA o texto ao meio!
+    // 3. O Planeta Bioluminescente surge no espaço e a nave despenca em direção ao planeta
+    // 4. Entrada na atmosfera e impacto final no chão da fase
     public class IntroShipCutscene : MonoBehaviour
     {
         private static bool jaMostrouIntro = false;
 
         private GameObject canvasObj;
-        private RawImage fundoImage;
-        private RectTransform crawlContainer;
-        private Text crawlText;
-        private RectTransform naveRasgandoRt;
+        private RectTransform estrelasContainer;
+        private List<Image> estrelas = new List<Image>();
+
+        private RectTransform planetaRt;
+        private RawImage planetaImg;
+
+        private RectTransform crawlRootRt;
+        private RectTransform crawlTopoRt;
+        private RectTransform crawlBaseRt;
+        private Text crawlTopoText;
+        private Text crawlBaseText;
+
+        private RectTransform naveRt;
+        private RawImage naveImg;
         private Image rastroCorteImg;
-        private Image alertaOverlay;
-        private Image flashBranco;
+        private Image flashTela;
         private Text legendaText;
         private GameObject barraLegendaObj;
 
-        private Texture2D texNaveFeliz;
+        private Texture2D texNaveSprite;
+        private Texture2D texPlanetaSprite;
+        private Texture2D texEspacoPlaneta;
         private Texture2D texNaveCaindo;
         private bool pulouCutscene = false;
 
@@ -35,7 +48,9 @@ namespace SpaceChico
         public void IniciarCutscene()
         {
             jaMostrouIntro = true;
-            texNaveFeliz = Resources.Load<Texture2D>("Intro/intro_ship_happy");
+            texNaveSprite = Resources.Load<Texture2D>("Intro/intro_ship_sprite");
+            texPlanetaSprite = Resources.Load<Texture2D>("Intro/intro_planet_sprite");
+            texEspacoPlaneta = Resources.Load<Texture2D>("Intro/intro_space_planet");
             texNaveCaindo = Resources.Load<Texture2D>("Intro/intro_ship_falling");
 
             CriarInterfaceCutscene();
@@ -66,122 +81,124 @@ namespace SpaceChico
 
             canvasObj.AddComponent<GraphicRaycaster>();
 
-            // Fundo espacial escuro
+            // 1. Fundo do espaço profundo
             GameObject bgObj = new GameObject("FundoEspaco");
             bgObj.transform.SetParent(canvasObj.transform, false);
             Image bgImg = bgObj.AddComponent<Image>();
-            bgImg.color = new Color(0.02f, 0.01f, 0.06f, 1f);
+            bgImg.color = new Color(0.02f, 0.01f, 0.05f, 1f);
             RectTransform bgRt = bgImg.rectTransform;
             bgRt.anchorMin = Vector2.zero;
             bgRt.anchorMax = Vector2.one;
             bgRt.offsetMin = Vector2.zero;
             bgRt.offsetMax = Vector2.zero;
 
-            // Imagem ilustrada de fundo (Chico feliz na nave / Nave caindo)
-            GameObject imgObj = new GameObject("CenaIlustrada");
-            imgObj.transform.SetParent(canvasObj.transform, false);
-            fundoImage = imgObj.AddComponent<RawImage>();
-            fundoImage.texture = texNaveFeliz;
-            fundoImage.color = new Color(1f, 1f, 1f, 0.38f);
-            RectTransform imgRt = fundoImage.rectTransform;
-            imgRt.anchorMin = Vector2.zero;
-            imgRt.anchorMax = Vector2.one;
-            imgRt.offsetMin = new Vector2(-40f, -40f);
-            imgRt.offsetMax = new Vector2(40f, 40f);
+            // 2. Campo de estrelas cintilantes no espaço
+            GameObject starsObj = new GameObject("CampoEstrelas");
+            starsObj.transform.SetParent(canvasObj.transform, false);
+            estrelasContainer = starsObj.AddComponent<RectTransform>();
+            estrelasContainer.anchorMin = Vector2.zero;
+            estrelasContainer.anchorMax = Vector2.one;
+            estrelasContainer.offsetMin = Vector2.zero;
+            estrelasContainer.offsetMax = Vector2.zero;
+
+            Random.InitState(42);
+            for (int i = 0; i < 75; i++)
+            {
+                GameObject st = new GameObject("Star_" + i);
+                st.transform.SetParent(estrelasContainer, false);
+                Image stImg = st.AddComponent<Image>();
+                float br = Random.Range(0.55f, 1f);
+                stImg.color = (i % 5 == 0)
+                    ? new Color(0.5f, 0.95f, 1f, br)
+                    : (i % 7 == 0 ? new Color(0.85f, 0.6f, 1f, br) : new Color(1f, 1f, 1f, br));
+
+                RectTransform stRt = stImg.rectTransform;
+                float tam = Random.Range(2.5f, 6.5f);
+                stRt.sizeDelta = new Vector2(tam, tam);
+                stRt.anchoredPosition = new Vector2(Random.Range(-940f, 940f), Random.Range(-520f, 520f));
+                estrelas.Add(stImg);
+            }
+
+            // 3. O Planeta Bioluminescente no espaço (começa pequeno ao longe e cresce na queda!)
+            GameObject planObj = new GameObject("PlanetaBioluminescente");
+            planObj.transform.SetParent(canvasObj.transform, false);
+            planetaImg = planObj.AddComponent<RawImage>();
+            planetaImg.texture = texPlanetaSprite != null ? texPlanetaSprite : texEspacoPlaneta;
+            planetaRt = planetaImg.rectTransform;
+            planetaRt.anchorMin = new Vector2(0.5f, 0.5f);
+            planetaRt.anchorMax = new Vector2(0.5f, 0.5f);
+            planetaRt.sizeDelta = new Vector2(260f, 260f);
+            planetaRt.anchoredPosition = new Vector2(560f, -240f);
+            planetaImg.color = new Color(1f, 1f, 1f, 0.55f);
 
             Font fonteTitulo = Resources.Load<Font>("Fonts/RussoOne-Regular");
             if (fonteTitulo == null) fonteTitulo = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
 
-            // Texto estilo Star Wars em perspectiva subindo pelo espaço
-            GameObject crawlObj = new GameObject("StarWarsCrawl");
-            crawlObj.transform.SetParent(canvasObj.transform, false);
-            crawlContainer = crawlObj.AddComponent<RectTransform>();
-            crawlContainer.anchorMin = new Vector2(0.5f, 0.5f);
-            crawlContainer.anchorMax = new Vector2(0.5f, 0.5f);
-            crawlContainer.sizeDelta = new Vector2(1100f, 1300f);
-            crawlContainer.anchoredPosition = new Vector2(0f, -680f);
-            crawlContainer.localRotation = Quaternion.Euler(28f, 0f, 0f);
+            // 4. Texto estilo Star Wars (dividido em metade superior e inferior para ser CORTADO pela nave!)
+            GameObject crawlRoot = new GameObject("StarWarsCrawlRoot");
+            crawlRoot.transform.SetParent(canvasObj.transform, false);
+            crawlRootRt = crawlRoot.AddComponent<RectTransform>();
+            crawlRootRt.anchorMin = new Vector2(0.5f, 0.5f);
+            crawlRootRt.anchorMax = new Vector2(0.5f, 0.5f);
+            crawlRootRt.sizeDelta = new Vector2(1150f, 900f);
+            crawlRootRt.anchoredPosition = new Vector2(0f, -520f);
+            crawlRootRt.localRotation = Quaternion.Euler(30f, 0f, 0f);
 
-            crawlText = crawlObj.AddComponent<Text>();
-            crawlText.font = fonteTitulo;
-            crawlText.fontSize = 36;
-            crawlText.lineSpacing = 1.35f;
-            crawlText.alignment = TextAnchor.UpperCenter;
-            crawlText.color = new Color(1f, 0.88f, 0.25f, 1f);
-            crawlText.text =
+            crawlTopoRt = CriarBlocoCrawl(
+                crawlRootRt,
+                "CrawlMetadeSuperior",
+                fonteTitulo,
+                new Vector2(0f, 190f),
                 "SPACE CHICO\n" +
                 "— Capítulo I: O Pântano Bioluminescente —\n\n" +
                 "O destemido felino interestelar CHICO viajava feliz\n" +
-                "pelo cosmos a bordo de sua nave exploradora.\n\n" +
-                "De repente, uma falha catastrófica no motor de dobra\n" +
-                "fez a espaçonave perder o controle!\n\n" +
-                "Atraída pela gravidade de um planeta selvagem,\n" +
-                "sua nave rasgou o espaço e despencou entre vapores\n" +
-                "tóxicos. Agora Chico precisa recuperar o\n" +
-                "PROPULSOR QUÂNTICO para voltar às estrelas!";
+                "pelo cosmos a bordo de sua nave exploradora.",
+                out crawlTopoText
+            );
 
-            Shadow crawlShadow = crawlObj.AddComponent<Shadow>();
-            crawlShadow.effectColor = new Color(0f, 0f, 0f, 0.9f);
-            crawlShadow.effectDistance = new Vector2(3f, -3f);
+            crawlBaseRt = CriarBlocoCrawl(
+                crawlRootRt,
+                "CrawlMetadeInferior",
+                fonteTitulo,
+                new Vector2(0f, -190f),
+                "De repente, uma falha catastrófica no propulsor\n" +
+                "fez a espaçonave perder o controle no espaço!\n\n" +
+                "Atraído pela gravidade de um planeta selvagem,\n" +
+                "Chico precisa sobreviver à queda e recuperar o\n" +
+                "PROPULSOR QUÂNTICO para voltar às estrelas!",
+                out crawlBaseText
+            );
 
-            // Feixe luminoso que "rasga a tela" quando a nave passa
-            GameObject rastroObj = new GameObject("RastroCorteTela");
+            // 5. Feixe de plasma que corta o texto quando a nave passa
+            GameObject rastroObj = new GameObject("RastroCorteTexto");
             rastroObj.transform.SetParent(canvasObj.transform, false);
             rastroCorteImg = rastroObj.AddComponent<Image>();
-            rastroCorteImg.color = new Color(0.5f, 0.95f, 1f, 0f);
+            rastroCorteImg.color = new Color(0.4f, 0.95f, 1f, 0f);
             RectTransform rastroRt = rastroCorteImg.rectTransform;
             rastroRt.anchorMin = new Vector2(0.5f, 0.5f);
             rastroRt.anchorMax = new Vector2(0.5f, 0.5f);
-            rastroRt.sizeDelta = new Vector2(2600f, 18f);
-            rastroRt.localRotation = Quaternion.Euler(0f, 0f, -22f);
+            rastroRt.sizeDelta = new Vector2(2500f, 16f);
+            rastroRt.localRotation = Quaternion.Euler(0f, 0f, 18f);
 
-            // Nave do Chico que cruza/rasga a tela em alta velocidade
-            GameObject navePassandoObj = new GameObject("NaveRasgandoTela");
-            navePassandoObj.transform.SetParent(canvasObj.transform, false);
-            naveRasgandoRt = navePassandoObj.AddComponent<RectTransform>();
-            naveRasgandoRt.anchorMin = new Vector2(0.5f, 0.5f);
-            naveRasgandoRt.anchorMax = new Vector2(0.5f, 0.5f);
-            naveRasgandoRt.sizeDelta = new Vector2(520f, 320f);
-            naveRasgandoRt.anchoredPosition = new Vector2(-1400f, 520f);
+            // 6. A Nave do Chico (com o gatinho dentro da cúpula e fogo no propulsor)
+            GameObject naveObj = new GameObject("NaveChico");
+            naveObj.transform.SetParent(canvasObj.transform, false);
+            naveImg = naveObj.AddComponent<RawImage>();
+            naveImg.texture = texNaveSprite;
+            naveRt = naveImg.rectTransform;
+            naveRt.anchorMin = new Vector2(0.5f, 0.5f);
+            naveRt.anchorMax = new Vector2(0.5f, 0.5f);
+            naveRt.sizeDelta = new Vector2(560f, 400f);
+            naveRt.anchoredPosition = new Vector2(1450f, 380f);
 
-            // Tenta usar o próprio sprite da nave/Chico na passagem
-            GameObject propShip = GameObject.Find("Prop_CrashedShip");
-            Sprite sprNave = propShip != null && propShip.GetComponent<SpriteRenderer>() != null
-                ? propShip.GetComponent<SpriteRenderer>().sprite
-                : null;
-
-            if (sprNave != null)
-            {
-                Image imgNave = navePassandoObj.AddComponent<Image>();
-                imgNave.sprite = sprNave;
-                imgNave.preserveAspect = true;
-                naveRasgandoRt.localScale = new Vector3(-1f, 1f, 1f);
-            }
-            else
-            {
-                RawImage rawNave = navePassandoObj.AddComponent<RawImage>();
-                rawNave.texture = texNaveCaindo;
-            }
-
-            // Overlay de alerta vermelho
-            GameObject alertObj = new GameObject("AlertaVermelho");
-            alertObj.transform.SetParent(canvasObj.transform, false);
-            alertaOverlay = alertObj.AddComponent<Image>();
-            alertaOverlay.color = new Color(1f, 0.1f, 0.1f, 0f);
-            RectTransform alertRt = alertaOverlay.rectTransform;
-            alertRt.anchorMin = Vector2.zero;
-            alertRt.anchorMax = Vector2.one;
-            alertRt.offsetMin = Vector2.zero;
-            alertRt.offsetMax = Vector2.zero;
-
-            // Barra inferior de legenda
+            // 7. Barra inferior de legenda
             barraLegendaObj = new GameObject("BarraLegenda");
             barraLegendaObj.transform.SetParent(canvasObj.transform, false);
             Image barraImg = barraLegendaObj.AddComponent<Image>();
-            barraImg.color = new Color(0.02f, 0.02f, 0.06f, 0.88f);
+            barraImg.color = new Color(0.02f, 0.02f, 0.06f, 0.86f);
             RectTransform barraRt = barraImg.rectTransform;
             barraRt.anchorMin = new Vector2(0f, 0f);
-            barraRt.anchorMax = new Vector2(1f, 0.14f);
+            barraRt.anchorMax = new Vector2(1f, 0.13f);
             barraRt.offsetMin = Vector2.zero;
             barraRt.offsetMax = Vector2.zero;
 
@@ -199,7 +216,7 @@ namespace SpaceChico
             legRt.offsetMax = new Vector2(-50f, -8f);
             barraLegendaObj.SetActive(false);
 
-            // Aviso para pular a abertura
+            // 8. Aviso para pular a abertura
             GameObject skipObj = new GameObject("AvisoPular");
             skipObj.transform.SetParent(canvasObj.transform, false);
             Text pularText = skipObj.AddComponent<Text>();
@@ -215,16 +232,64 @@ namespace SpaceChico
             skipRt.anchoredPosition = new Vector2(-36f, -28f);
             skipRt.sizeDelta = new Vector2(450f, 50f);
 
-            // Flash branco de transição
-            GameObject flashObj = new GameObject("FlashBranco");
+            // 9. Flash de tela
+            GameObject flashObj = new GameObject("FlashTela");
             flashObj.transform.SetParent(canvasObj.transform, false);
-            flashBranco = flashObj.AddComponent<Image>();
-            flashBranco.color = new Color(1f, 1f, 1f, 0f);
-            RectTransform flashRt = flashBranco.rectTransform;
+            flashTela = flashObj.AddComponent<Image>();
+            flashTela.color = new Color(1f, 1f, 1f, 0f);
+            RectTransform flashRt = flashTela.rectTransform;
             flashRt.anchorMin = Vector2.zero;
             flashRt.anchorMax = Vector2.one;
             flashRt.offsetMin = Vector2.zero;
             flashRt.offsetMax = Vector2.zero;
+        }
+
+        private RectTransform CriarBlocoCrawl(RectTransform parent, string nome, Font fonte, Vector2 pos, string conteudo, out Text txtComp)
+        {
+            GameObject go = new GameObject(nome);
+            go.transform.SetParent(parent, false);
+            RectTransform rt = go.AddComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0.5f, 0.5f);
+            rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(1100f, 380f);
+            rt.anchoredPosition = pos;
+
+            txtComp = go.AddComponent<Text>();
+            txtComp.font = fonte;
+            txtComp.fontSize = 36;
+            txtComp.lineSpacing = 1.32f;
+            txtComp.alignment = TextAnchor.MiddleCenter;
+            txtComp.color = new Color(1f, 0.86f, 0.22f, 1f);
+            txtComp.text = conteudo;
+
+            Shadow sh = go.AddComponent<Shadow>();
+            sh.effectColor = new Color(0f, 0f, 0f, 0.95f);
+            sh.effectDistance = new Vector2(3f, -3f);
+            return rt;
+        }
+
+        private void AnimarEstrelas(float tempo, float velocidadeScrollX, float velocidadeScrollY)
+        {
+            for (int i = 0; i < estrelas.Count; i++)
+            {
+                Image st = estrelas[i];
+                if (st == null) continue;
+                RectTransform rt = st.rectTransform;
+                Vector2 p = rt.anchoredPosition;
+                float camada = (i % 3 + 1) * 0.45f;
+                p.x += velocidadeScrollX * camada * Time.unscaledDeltaTime;
+                p.y += velocidadeScrollY * camada * Time.unscaledDeltaTime;
+
+                if (p.x > 960f) p.x -= 1920f;
+                if (p.x < -960f) p.x += 1920f;
+                if (p.y > 540f) p.y -= 1080f;
+                if (p.y < -540f) p.y += 1080f;
+                rt.anchoredPosition = p;
+
+                Color c = st.color;
+                c.a = 0.45f + 0.5f * Mathf.Abs(Mathf.Sin(tempo * 3.5f + i));
+                st.color = c;
+            }
         }
 
         private IEnumerator RotinaCutscene()
@@ -236,127 +301,191 @@ namespace SpaceChico
             Vector3 posInicialPlayer = player != null ? player.transform.position : new Vector3(-1.5f, -0.95f, 0f);
 
             // =========================================================================
-            // PARTE 1: Texto estilo Star Wars subindo no espaço + Chico feliz na nave
+            // ATO 1: O Espaço Sideral e o Texto Estilo Star Wars Subindo
             // =========================================================================
-            fundoImage.texture = texNaveFeliz;
-            fundoImage.color = new Color(1f, 1f, 1f, 0.35f);
-            AudioManager.Play(Sfx.PowerUp, 0.65f);
-
-            float duracaoCrawl = 6.2f;
+            float duracaoCrawl = 4.8f;
             float t = 0f;
             while (t < duracaoCrawl && !pulouCutscene)
             {
                 t += Time.unscaledDeltaTime;
                 float p = t / duracaoCrawl;
 
-                // Sobe o texto estilo Star Wars e diminui levemente a escala conforme vai para o fundo do espaço
-                float posY = Mathf.Lerp(-560f, 680f, p);
-                float escalaCrawl = Mathf.Lerp(1.05f, 0.58f, p);
-                crawlContainer.anchoredPosition = new Vector2(0f, posY);
-                crawlContainer.localScale = new Vector3(escalaCrawl, escalaCrawl, 1f);
+                AnimarEstrelas(t, -12f, -8f);
+                planetaRt.localRotation = Quaternion.Euler(0f, 0f, t * 2.5f);
 
-                // Revela o Chico feliz na cabine da nave gradualmente enquanto o texto sobe
-                float alphaFundo = Mathf.Lerp(0.32f, 0.95f, Mathf.Clamp01((p - 0.35f) / 0.5f));
-                fundoImage.color = new Color(1f, 1f, 1f, alphaFundo);
-                fundoImage.rectTransform.anchoredPosition = new Vector2(0f, Mathf.Sin(t * 2.5f) * 12f);
-
-                // Desvanece o texto no final da subida
-                if (p > 0.78f)
-                {
-                    float alphaTexto = Mathf.Clamp01(1f - (p - 0.78f) / 0.22f);
-                    crawlText.color = new Color(1f, 0.88f, 0.25f, alphaTexto);
-                }
+                // Sobe o texto estilo Star Wars do fundo da tela até o centro do espaço
+                float crawlY = Mathf.Lerp(-520f, 45f, p);
+                float escalaCrawl = Mathf.Lerp(1.06f, 0.82f, p);
+                crawlRootRt.anchoredPosition = new Vector2(0f, crawlY);
+                crawlRootRt.localScale = new Vector3(escalaCrawl, escalaCrawl, 1f);
 
                 yield return null;
             }
 
-            crawlContainer.gameObject.SetActive(false);
-            barraLegendaObj.SetActive(true);
-
             // =========================================================================
-            // PARTE 2: Chico feliz na nave -> Alerta de pane -> NAVE RASGA A TELA!
+            // ATO 2: A Nave do Chico Aparece e CORTA O TEXTO AO MEIO!
             // =========================================================================
             if (!pulouCutscene)
             {
-                fundoImage.color = Color.white;
-                legendaText.text = "Chico viajava feliz pelo espaço... até o motor sofrer uma pane!";
-                AudioManager.Play(Sfx.Alert, 0.95f);
-
-                t = 0f;
-                while (t < 1.5f && !pulouCutscene)
-                {
-                    t += Time.unscaledDeltaTime;
-                    float alphaVermelho = Mathf.Abs(Mathf.Sin(t * 11f)) * 0.45f;
-                    alertaOverlay.color = new Color(1f, 0.1f, 0.1f, alphaVermelho);
-                    fundoImage.rectTransform.anchoredPosition = new Vector2(
-                        Mathf.Sin(t * 48f) * 15f,
-                        Mathf.Cos(t * 40f) * 13f
-                    );
-                    yield return null;
-                }
-
-                // A NAVE DO CHICO RASGA A TELA!
+                barraLegendaObj.SetActive(true);
+                legendaText.text = "A nave desgovernada do Chico cortou o espaço em alta velocidade!";
+                AudioManager.Play(Sfx.Alert, 0.9f);
                 AudioManager.Play(Sfx.Shoot, 1.0f);
-                AudioManager.Play(Sfx.BossSpit, 0.95f);
-                legendaText.text = "A nave desgovernada rasgou o espaço rumo ao planeta!";
 
                 t = 0f;
-                float duracaoRasgo = 0.75f;
-                Vector2 iniNave = new Vector2(-1350f, 480f);
-                Vector2 fimNave = new Vector2(1350f, -480f);
+                float duracaoCorte = 1.35f;
+                bool jaCortouTexto = false;
 
-                while (t < duracaoRasgo && !pulouCutscene)
+                // A nave aponta para a esquerda/baixo, então vem da direita/topo para a esquerda/baixo
+                Vector2 posNaveIni = new Vector2(1380f, 360f);
+                Vector2 posNaveFim = new Vector2(-1380f, -320f);
+
+                while (t < duracaoCorte && !pulouCutscene)
                 {
                     t += Time.unscaledDeltaTime;
-                    float p = Mathf.Clamp01(t / duracaoRasgo);
+                    float p = Mathf.Clamp01(t / duracaoCorte);
 
-                    naveRasgandoRt.anchoredPosition = Vector2.Lerp(iniNave, fimNave, p);
-                    naveRasgandoRt.localRotation = Quaternion.Euler(0f, 0f, -22f + Mathf.Sin(t * 60f) * 6f);
+                    AnimarEstrelas(t + 5f, -45f, -20f);
 
-                    // Feixe brilhante que rasga a tela no caminho da nave
-                    float larguraCorte = Mathf.Sin(p * Mathf.PI) * 54f;
-                    rastroCorteImg.rectTransform.sizeDelta = new Vector2(2600f, Mathf.Max(6f, larguraCorte));
-                    rastroCorteImg.color = new Color(0.6f, 0.98f, 1f, Mathf.Sin(p * Mathf.PI) * 0.95f);
+                    // Movimento rápido da nave atravessando a tela
+                    naveRt.anchoredPosition = Vector2.Lerp(posNaveIni, posNaveFim, p);
+                    naveRt.localRotation = Quaternion.Euler(0f, 0f, Mathf.Sin(t * 55f) * 5f);
 
-                    if (p > 0.65f)
+                    // Feixe luminoso que rasga o texto exatamente onde a nave passa
+                    float intensidadeFeixe = Mathf.Sin(p * Mathf.PI);
+                    rastroCorteImg.color = new Color(0.35f, 0.95f, 1f, intensidadeFeixe * 0.95f);
+                    rastroCorteImg.rectTransform.sizeDelta = new Vector2(2500f, 8f + intensidadeFeixe * 42f);
+
+                    // Quando a nave atinge o meio do texto (p >= 0.36f), o texto é CORTADO ao meio!
+                    if (p >= 0.36f)
                     {
-                        flashBranco.color = new Color(0.85f, 0.98f, 1f, (p - 0.65f) / 0.35f);
+                        if (!jaCortouTexto)
+                        {
+                            jaCortouTexto = true;
+                            AudioManager.Play(Sfx.BossSlam, 0.85f);
+                            flashTela.color = new Color(0.6f, 0.95f, 1f, 0.7f);
+                        }
+
+                        float pCorte = (p - 0.36f) / 0.64f;
+                        flashTela.color = new Color(0.6f, 0.95f, 1f, Mathf.Max(0f, 0.7f - pCorte * 1.8f));
+
+                        // Metade de cima do texto voa para cima/esquerda e gira
+                        crawlTopoRt.anchoredPosition = new Vector2(-pCorte * 420f, 190f + pCorte * 340f);
+                        crawlTopoRt.localRotation = Quaternion.Euler(0f, 0f, pCorte * 22f);
+
+                        // Metade de baixo do texto cai para baixo/direita e gira
+                        crawlBaseRt.anchoredPosition = new Vector2(pCorte * 420f, -190f - pCorte * 360f);
+                        crawlBaseRt.localRotation = Quaternion.Euler(0f, 0f, -pCorte * 24f);
+
+                        float alphaTxt = Mathf.Clamp01(1f - pCorte * 1.25f);
+                        crawlTopoText.color = new Color(1f, 0.86f, 0.22f, alphaTxt);
+                        crawlBaseText.color = new Color(1f, 0.86f, 0.22f, alphaTxt);
                     }
 
                     yield return null;
                 }
 
-                naveRasgandoRt.gameObject.SetActive(false);
+                crawlRootRt.gameObject.SetActive(false);
                 rastroCorteImg.gameObject.SetActive(false);
             }
 
             // =========================================================================
-            // PARTE 3: Vemos o Chico cair nesse planeta (Cena ilustrada + Queda real!)
+            // ATO 3: O Planeta Bioluminescente cresce na tela e a nave cai nele!
             // =========================================================================
             if (!pulouCutscene)
             {
-                fundoImage.texture = texNaveCaindo;
-                alertaOverlay.color = new Color(1f, 0.2f, 0.1f, 0.12f);
-                legendaText.text = "Cuidado, Chico! Queda livre no Pântano Bioluminescente!";
-                AudioManager.Play(Sfx.Alert, 0.75f);
+                legendaText.text = "Atraída pela gravidade, a nave despencou rumo ao Planeta Bioluminescente!";
+                AudioManager.Play(Sfx.BossSpit, 0.9f);
+
+                // Vira a nave para a direita (em direção ao planeta)
+                naveRt.localScale = new Vector3(-1f, 1f, 1f);
+                planetaImg.color = Color.white;
 
                 t = 0f;
-                while (t < 2.3f && !pulouCutscene)
+                float duracaoPlaneta = 2.8f;
+                float proxAlarme = 0.4f;
+
+                while (t < duracaoPlaneta && !pulouCutscene)
                 {
                     t += Time.unscaledDeltaTime;
-                    flashBranco.color = new Color(1f, 1f, 1f, Mathf.Max(0f, 1f - t * 3f));
+                    float p = Mathf.Clamp01(t / duracaoPlaneta);
+                    float curvaZoom = p * p;
 
-                    float p = t / 2.3f;
-                    float escala = 1.02f + p * 0.10f;
-                    float descidaX = Mathf.Lerp(25f, -25f, p) + Mathf.Sin(t * 50f) * 12f;
-                    float descidaY = Mathf.Lerp(25f, -25f, p) + Mathf.Cos(t * 42f) * 12f;
-                    fundoImage.rectTransform.localScale = new Vector3(escala, escala, 1f);
-                    fundoImage.rectTransform.anchoredPosition = new Vector2(descidaX, descidaY);
+                    if (t >= proxAlarme)
+                    {
+                        proxAlarme += 0.75f;
+                        AudioManager.Play(Sfx.Alert, 0.7f);
+                    }
+
+                    // As estrelas sobem rápido dando sensação da câmera mergulhando para o planeta
+                    AnimarEstrelas(t + 10f, -80f, 220f);
+
+                    // O Planeta se move para o centro e cresce até tomar conta da visão!
+                    Vector2 posPlaneta = Vector2.Lerp(new Vector2(560f, -240f), new Vector2(120f, -40f), p);
+                    float tamPlaneta = Mathf.Lerp(260f, 1550f, curvaZoom);
+                    planetaRt.anchoredPosition = posPlaneta;
+                    planetaRt.sizeDelta = new Vector2(tamPlaneta, tamPlaneta);
+                    planetaRt.localRotation = Quaternion.Euler(0f, 0f, 15f + t * 8f);
+
+                    // A nave do Chico faz uma curva mergulhando para dentro do planeta e diminuindo em perspectiva
+                    Vector2 posNave = Vector2.Lerp(new Vector2(-780f, 280f), new Vector2(110f, -20f), p);
+                    posNave.y += Mathf.Sin(p * Mathf.PI) * 160f + Mathf.Sin(t * 45f) * 10f;
+                    naveRt.anchoredPosition = posNave;
+
+                    float escalaNave = Mathf.Lerp(0.95f, 0.18f, p);
+                    naveRt.localScale = new Vector3(-escalaNave, escalaNave, 1f);
+                    naveRt.localRotation = Quaternion.Euler(0f, 0f, Mathf.Lerp(12f, -38f, p) + Mathf.Sin(t * 50f) * 6f);
+
+                    if (p > 0.78f)
+                    {
+                        flashTela.color = new Color(0.5f, 1f, 0.85f, (p - 0.78f) / 0.22f);
+                    }
+
                     yield return null;
                 }
             }
 
-            // Remove o overlay e mostra a nave e o próprio Chico caindo no cenário da fase!
+            // =========================================================================
+            // ATO 4: Entrada rasante nos cogumelos do planeta + Queda real na fase!
+            // =========================================================================
+            if (!pulouCutscene && texNaveCaindo != null)
+            {
+                planetaRt.gameObject.SetActive(false);
+                naveRt.gameObject.SetActive(false);
+
+                // Mostra a nave entrando na atmosfera de cogumelos gigantes do pântano
+                GameObject closeQuedaObj = new GameObject("CloseQuedaPantano");
+                closeQuedaObj.transform.SetParent(canvasObj.transform, false);
+                closeQuedaObj.transform.SetSiblingIndex(2);
+                RawImage closeImg = closeQuedaObj.AddComponent<RawImage>();
+                closeImg.texture = texNaveCaindo;
+                RectTransform closeRt = closeImg.rectTransform;
+                closeRt.anchorMin = Vector2.zero;
+                closeRt.anchorMax = Vector2.one;
+                closeRt.offsetMin = new Vector2(-40f, -40f);
+                closeRt.offsetMax = new Vector2(40f, 40f);
+
+                legendaText.text = "Segure firme, Chico! Impacto iminente no pântano!";
+
+                t = 0f;
+                float duracaoAtmosfera = 1.6f;
+                while (t < duracaoAtmosfera && !pulouCutscene)
+                {
+                    t += Time.unscaledDeltaTime;
+                    float p = t / duracaoAtmosfera;
+                    flashTela.color = new Color(0.5f, 1f, 0.85f, Mathf.Max(0f, 1f - t * 3.5f));
+
+                    float esc = 1.02f + p * 0.08f;
+                    closeRt.localScale = new Vector3(esc, esc, 1f);
+                    closeRt.anchoredPosition = new Vector2(
+                        Mathf.Lerp(25f, -25f, p) + Mathf.Sin(t * 50f) * 12f,
+                        Mathf.Lerp(20f, -25f, p) + Mathf.Cos(t * 44f) * 12f
+                    );
+                    yield return null;
+                }
+            }
+
+            // Fecha a tela de vídeo e mostra a nave e o Chico caindo no chão da fase!
             if (canvasObj != null) Destroy(canvasObj);
 
             if (player != null && !pulouCutscene)
@@ -374,7 +503,6 @@ namespace SpaceChico
                 if (player.spriteFall != null && player.spriteRenderer != null)
                     player.spriteRenderer.sprite = player.spriteFall;
 
-                // Nave e Chico despencam do céu do planeta até o chão do pântano
                 float quedaT = 0f;
                 float duracaoQueda = 0.85f;
                 while (quedaT < duracaoQueda)
@@ -406,7 +534,6 @@ namespace SpaceChico
                     rb.linearVelocity = Vector2.zero;
                 }
 
-                // Impacto da queda no planeta!
                 AudioManager.Play(Sfx.BossSlam, 1.0f);
                 AudioManager.Play(Sfx.Land, 0.85f);
                 CameraFollow.Shake(0.4f, 0.35f);
