@@ -50,8 +50,8 @@ namespace SpaceChico
 
             if (panels != null && panels.Length > 0 && panels[0].sprite != null)
             {
-                // Calcula a largura real do sprite no mundo
-                panelWidth = panels[0].bounds.size.x;
+                // Calcula a largura real do sprite no mundo (com leve sobreposição de 0.02 para evitar fresta subpixel)
+                panelWidth = panels[0].bounds.size.x - 0.02f;
 
                 // Organiza os 3 painéis perfeitamente alinhados lado a lado no início
                 // Painel 0 (Esquerda), Painel 1 (Centro), Painel 2 (Direita)
