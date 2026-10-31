@@ -15,13 +15,13 @@ namespace SpaceChico.Editor
                 if (EditorApplication.isPlayingOrWillChangePlaymode)
                     return;
 
-                if (SessionState.GetBool("SpaceChico_RebuiltDone_v2", false))
+                if (SessionState.GetBool("SpaceChico_RebuiltDone_v3", false))
                     return;
 
-                SessionState.SetBool("SpaceChico_RebuiltDone_v2", true);
-                Debug.Log("<color=#00e5ff><b>[Space Chico] Atualizando HUD e novo Background...</b></color>");
+                SessionState.SetBool("SpaceChico_RebuiltDone_v3", true);
+                Debug.Log("<color=#00e5ff><b>[Space Chico] Atualizando usabilidade, responsividade e prefabs...</b></color>");
                 SpaceChicoBuilder.BuildEverything();
-                Debug.Log("<color=#00ff88><b>[Space Chico] HUD no canto e Background atualizados com sucesso!</b></color>");
+                Debug.Log("<color=#00ff88><b>[Space Chico] Usabilidade e responsividade atualizadas com sucesso!</b></color>");
             };
         }
     }

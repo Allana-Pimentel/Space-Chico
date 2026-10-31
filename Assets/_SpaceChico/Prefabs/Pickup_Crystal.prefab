@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 5270097177929859125}
   - component: {fileID: 7756564602899127339}
   - component: {fileID: 6481595678418206222}
-  - component: {fileID: 2455911713071712705}
+  - component: {fileID: 2604458289389467108}
   m_Layer: 13
   m_Name: Pickup_Crystal
   m_TagString: Untagged
@@ -147,7 +147,7 @@ MonoBehaviour:
   value: 1
   powerItemData: {fileID: 0}
   burstColor: {r: 0.8, g: 0.4, b: 1, a: 1}
---- !u!114 &2455911713071712705
+--- !u!114 &2604458289389467108
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

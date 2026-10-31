@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1964509390968289128}
   - component: {fileID: 4108054117774381366}
-  - component: {fileID: 9026703564437919140}
+  - component: {fileID: 4047659736173313388}
   m_Layer: 0
   m_Name: ShieldBubble
   m_TagString: Untagged
@@ -93,7 +93,7 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
   m_BlendShapeWeights: []
---- !u!114 &9026703564437919140
+--- !u!114 &4047659736173313388
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

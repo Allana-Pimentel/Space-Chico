@@ -62,6 +62,10 @@ namespace SpaceChico
         [Header("Efeitos e Animações")]
         public float runAnimSpeed = 0.14f;
 
+        [Header("Usabilidade & Prompts Contextuais")]
+        [Tooltip("Balão ou texto indicador flutuante sobre a cabeça do Chico (ex: [W / ↑] Subir)")]
+        public GameObject climbHintObject;
+
         public PlayerState State { get; private set; } = PlayerState.Idle;
         public float Facing { get; private set; } = 1f;
         public bool IsGrounded { get; private set; }
@@ -147,6 +151,25 @@ namespace SpaceChico
             HandleInput();
             UpdateFSM();
             UpdateSprite();
+            UpdateContextHints();
+        }
+
+        private void UpdateContextHints()
+        {
+            if (climbHintObject == null) return;
+
+            // Exibe a dica de subir somente quando estiver em contato com o cipó e não estiver já escalando
+            bool shouldShow = activeVine != null && State != PlayerState.Climbing && State != PlayerState.Dead && State != PlayerState.Hurt;
+            if (climbHintObject.activeSelf != shouldShow)
+            {
+                climbHintObject.SetActive(shouldShow);
+            }
+
+            // Impede que o texto fique espelhado se o Chico virar para a esquerda
+            if (shouldShow)
+            {
+                climbHintObject.transform.localScale = new Vector3(Facing, 1f, 1f);
+            }
         }
 
         private void FixedUpdate()
@@ -272,6 +295,7 @@ namespace SpaceChico
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, force);
             ChangeState(PlayerState.Jump);
             canDoubleJump = true; // Renova salto aéreo
+            GameManager.Hitstop(0.06f); // Micro congelamento de impacto tátil (Game Feel)
         }
 
         private void FixedUpdateMovement()
@@ -299,10 +323,17 @@ namespace SpaceChico
             float accelRate = Mathf.Abs(targetSpeed) > 0.01f ? acceleration : deceleration;
             float newSpeedX = Mathf.MoveTowards(rb.linearVelocity.x, targetSpeed, accelRate * Time.fixedDeltaTime);
 
-            // Gravidade adaptativa (cai mais rápido para game feel satisfatório - Risco Técnico 1)
+            // Gravidade adaptativa & Apex Float (Game Feel / Responsividade)
             float targetGravity = initialGravityScale;
-            if (rb.linearVelocity.y < 0f)
+
+            if (!IsGrounded && Mathf.Abs(rb.linearVelocity.y) < 1.4f)
             {
+                // Ápice do salto: leve sustentação para permitir micro-ajustes de aterrissagem
+                targetGravity = initialGravityScale * 0.65f;
+            }
+            else if (rb.linearVelocity.y < 0f)
+            {
+                // Queda rápida e responsiva (evita sensação de gravidade lunar)
                 targetGravity = initialGravityScale * fallGravityMultiplier;
             }
             rb.gravityScale = targetGravity;
@@ -485,6 +516,7 @@ namespace SpaceChico
 
             AudioManager.Play(Sfx.Hurt);
             CameraFollow.Shake(0.25f, 0.2f);
+            GameManager.Hitstop(0.08f); // Pausa tátil no dano para feedback claro ao jogador
             VFX.Burst(transform.position, new Color(1f, 0.3f, 0.3f), 12, 3f, 0.2f, 0.35f);
         }
 

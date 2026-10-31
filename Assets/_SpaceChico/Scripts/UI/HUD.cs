@@ -88,6 +88,20 @@ namespace SpaceChico
         private void Update()
         {
             UpdatePowerTimers();
+            UpdateOxygenAlert();
+        }
+
+        private void UpdateOxygenAlert()
+        {
+            if (stats == null || oxygenFillImage == null) return;
+            float pct = stats.CurrentOxygen / Mathf.Max(1f, stats.maxOxygen);
+
+            // Alerta visual pulsante de oxigênio crítico (< 20%)
+            if (pct < 0.2f && pct > 0f)
+            {
+                float pulse = (Mathf.Sin(Time.unscaledTime * 9f) + 1f) * 0.5f;
+                oxygenFillImage.color = Color.Lerp(new Color(1f, 0.15f, 0.15f), new Color(0.5f, 0.05f, 0.05f), pulse);
+            }
         }
 
         public void UpdateLife(int current, int max)

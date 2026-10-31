@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 4155220237869726151}
   - component: {fileID: 1434803020717904505}
   - component: {fileID: 4592416236807192333}
-  - component: {fileID: 3028775662426196711}
+  - component: {fileID: 241263501465531060}
   m_Layer: 13
   m_Name: Pickup_PowerShield
   m_TagString: Untagged
@@ -147,7 +147,7 @@ MonoBehaviour:
   value: 1
   powerItemData: {fileID: 11400000, guid: fb12014cdb8129644b0bf23aea851558, type: 2}
   burstColor: {r: 1, g: 0.85, b: 0.3, a: 1}
---- !u!114 &3028775662426196711
+--- !u!114 &241263501465531060
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

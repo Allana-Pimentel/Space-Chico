@@ -334,6 +334,26 @@ namespace SpaceChico.Editor
             shieldVis.SetActive(false);
             powers.shieldBubbleVisual = shieldVis;
 
+            // Interaction Hint (Prompt contextual flutuante acima da cabeça do Chico)
+            var hintObj = new GameObject("InteractionHint");
+            hintObj.transform.SetParent(go.transform);
+            hintObj.transform.localPosition = new Vector3(0f, 1.8f, 0f);
+            var tm = hintObj.AddComponent<TextMesh>();
+            tm.text = "[W / ↑] Subir";
+            tm.fontSize = 28;
+            tm.characterSize = 0.07f;
+            tm.anchor = TextAnchor.MiddleCenter;
+            tm.alignment = TextAlignment.Center;
+            tm.color = new Color(0.35f, 1f, 0.75f);
+            var font = AssetDatabase.LoadAssetAtPath<Font>("Assets/_SpaceChico/Resources/Fonts/RussoOne-Regular.ttf");
+            if (font != null)
+            {
+                tm.font = font;
+                hintObj.GetComponent<MeshRenderer>().sharedMaterial = font.material;
+            }
+            hintObj.SetActive(false);
+            pc.climbHintObject = hintObj;
+
             var prefab = PrefabUtility.SaveAsPrefabAsset(go, path);
             Object.DestroyImmediate(go);
             return prefab;
@@ -615,6 +635,7 @@ namespace SpaceChico.Editor
             var cs = go.AddComponent<CanvasScaler>();
             cs.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             cs.referenceResolution = new Vector2(1920, 1080);
+            cs.matchWidthOrHeight = 0.5f; // Garante adaptação responsiva balanceada em 16:9, 16:10 e Ultrawide
             go.AddComponent<GraphicRaycaster>();
 
             Font russoFont = AssetDatabase.LoadAssetAtPath<Font>("Assets/_SpaceChico/Resources/Fonts/RussoOne-Regular.ttf");

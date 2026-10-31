@@ -76,6 +76,26 @@ namespace SpaceChico
             StateChanged?.Invoke(s);
         }
 
+        /// <summary>
+        /// Micro-congelamento tátil de impacto (Hitstop / Game Feel).
+        /// Dá peso físico imediato aos acertos e danos sem quebrar a taxa de quadros.
+        /// </summary>
+        public static void Hitstop(float duration = 0.06f)
+        {
+            if (Instance == null || Instance.State != GameState.Playing) return;
+            Instance.StartCoroutine(Instance.HitstopRoutine(duration));
+        }
+
+        private System.Collections.IEnumerator HitstopRoutine(float duration)
+        {
+            Time.timeScale = 0.05f;
+            yield return new WaitForSecondsRealtime(duration);
+            if (State == GameState.Playing)
+            {
+                Time.timeScale = 1f;
+            }
+        }
+
         /// <summary>Abre a mochila (pausa o jogo). <paramref name="highlight"/> destaca um item recém-coletado.</summary>
         public void OpenBackpack(ItemData highlight, Action onClosed)
         {
