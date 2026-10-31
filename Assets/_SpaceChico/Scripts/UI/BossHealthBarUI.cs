@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace SpaceChico
@@ -73,6 +73,7 @@ namespace SpaceChico
             if (fillImage != null)
             {
                 fillImage.fillAmount = Mathf.MoveTowards(fillImage.fillAmount, targetFill, Time.unscaledDeltaTime * 1.5f);
+                fillImage.rectTransform.anchorMax = new Vector2(fillImage.fillAmount, 1f);
             }
         }
 

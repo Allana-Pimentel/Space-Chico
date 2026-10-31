@@ -25,19 +25,15 @@ namespace SpaceChico
 
         public static int GroundMask => LayerMask.GetMask(Ground);
 
-        /// <summary>Pares de layers que NÃO devem colidir.</summary>
         public static readonly string[,] IgnoredPairs =
         {
-            { Player, Enemy },              // corpo do inimigo não empurra o jogador (o dano vem dos triggers)
             { Enemy, Enemy },
             { Enemy, Pickup },
             { Enemy, Hazard },
             { Projectile, Player },
-            { Projectile, Enemy },          // o tiro acerta os triggers (EnemyTrigger), não o corpo
             { Projectile, Pickup },
             { Projectile, Projectile },
             { Projectile, Hazard },
-            { EnemyTrigger, Ground },
             { EnemyTrigger, Enemy },
             { EnemyTrigger, EnemyTrigger },
             { EnemyTrigger, Pickup },

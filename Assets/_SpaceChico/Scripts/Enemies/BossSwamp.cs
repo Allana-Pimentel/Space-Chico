@@ -27,8 +27,8 @@ namespace SpaceChico
         [Header("Ataques")]
         public GameObject spitProjectilePrefab;
         public Transform spitMouthPoint;
-        public float spitCooldownPhase1 = 4.2f;
-        public float spitCooldownPhase2 = 2.4f;
+        public float spitCooldownPhase1 = 2.4f;
+        public float spitCooldownPhase2 = 1.6f;
 
         [Header("Sprites")]
         public Sprite spriteIdle;
@@ -79,6 +79,8 @@ namespace SpaceChico
         public void ActivateBoss()
         {
             if (state != BossState.Dormant) return;
+            var bar = FindAnyObjectByType<BossHealthBarUI>();
+            if (bar != null) bar.Show();
             StartCoroutine(IntroSequence());
         }
 
@@ -87,26 +89,33 @@ namespace SpaceChico
             state = BossState.Intro;
             rb.linearVelocity = Vector2.zero;
 
+            FacePlayer();
             AudioManager.Play(Sfx.BossRoar);
             CameraFollow.Shake(0.45f, 0.35f);
             SetSprite(spriteAttack);
 
-            yield return new WaitForSeconds(1.5f);
+            yield return new WaitForSeconds(1.0f);
 
-            SetSprite(spriteIdle);
-            state = BossState.MoveToPlayer;
-            attackTimer = 2.0f;
+            // Já dispara a primeira gosma logo ao despertar
+            StartSpitAttack();
         }
 
         protected override void Update()
         {
             base.Update();
 
-            if (isDead || state == BossState.Dormant || state == BossState.Intro || state == BossState.EnrageTransition)
-                return;
-
             if (playerTransform == null && GameManager.Instance != null && GameManager.Instance.player != null)
                 playerTransform = GameManager.Instance.player.transform;
+
+            if (state == BossState.Dormant)
+            {
+                if (playerTransform != null && Mathf.Abs(playerTransform.position.x - transform.position.x) < 18f)
+                    ActivateBoss();
+                return;
+            }
+
+            if (isDead || state == BossState.Intro || state == BossState.EnrageTransition)
+                return;
 
             attackTimer -= Time.deltaTime;
 
@@ -133,19 +142,24 @@ namespace SpaceChico
             }
         }
 
+        float FacePlayer()
+        {
+            float dirX = (playerTransform != null && playerTransform.position.x < transform.position.x) ? -1f : 1f;
+            if (spriteRenderer != null) spriteRenderer.flipX = dirX < 0f;
+            return dirX;
+        }
+
         void UpdateMoveToPlayer()
         {
             if (playerTransform == null) return;
 
-            float dirX = Mathf.Sign(playerTransform.position.x - transform.position.x);
+            float dirX = FacePlayer();
             float speed = isPhase2 ? moveSpeedPhase2 : moveSpeedPhase1;
-
-            if (spriteRenderer != null) spriteRenderer.flipX = dirX > 0f;
             rb.linearVelocity = new Vector2(dirX * speed, rb.linearVelocity.y);
 
             if (attackTimer <= 0f)
             {
-                if (isPhase2 && UnityEngine.Random.value > 0.45f)
+                if (isPhase2 && UnityEngine.Random.value > 0.55f)
                     StartLeapAttack();
                 else
                     StartSpitAttack();
@@ -156,9 +170,10 @@ namespace SpaceChico
         {
             state = BossState.SpitAttack;
             rb.linearVelocity = Vector2.zero;
-            stateTimer = 0.9f;
+            stateTimer = 0.75f;
             attackTimer = isPhase2 ? spitCooldownPhase2 : spitCooldownPhase1;
 
+            FacePlayer();
             SetSprite(spriteAttack);
             AudioManager.Play(Sfx.BossSpit);
 
@@ -170,27 +185,30 @@ namespace SpaceChico
 
         IEnumerator FireTripleSpit()
         {
-            FireSingleSpit(-12f);
-            yield return new WaitForSeconds(0.2f);
+            FireSingleSpit(-10f);
+            yield return new WaitForSeconds(0.18f);
             FireSingleSpit(0f);
-            yield return new WaitForSeconds(0.2f);
-            FireSingleSpit(12f);
+            yield return new WaitForSeconds(0.18f);
+            FireSingleSpit(10f);
         }
 
         void FireSingleSpit(float angleOffset)
         {
             if (spitProjectilePrefab == null) return;
 
-            Vector3 spawnPos = spitMouthPoint != null ? spitMouthPoint.position : transform.position + Vector3.up * 1.2f;
+            float dirX = FacePlayer();
+            Vector3 spawnPos = transform.position + new Vector3(dirX * 1.45f, 1.35f, 0f);
             var projObj = Instantiate(spitProjectilePrefab, spawnPos, Quaternion.identity);
             var spit = projObj.GetComponent<BossSpitProjectile>();
 
+            VFX.Burst(spawnPos, new Color(0.3f, 1f, 0.2f), 10, 3.2f, 0.2f, 0.3f);
+
             if (spit != null)
             {
-                Vector2 targetPos = playerTransform != null ? (Vector2)playerTransform.position : (Vector2)transform.position + Vector2.left * 5f;
+                Vector2 targetPos = playerTransform != null ? (Vector2)playerTransform.position : (Vector2)transform.position + new Vector2(dirX * 7f, 0f);
                 Vector2 toTarget = targetPos - (Vector2)spawnPos;
-                float vx = Mathf.Clamp(toTarget.x * 1.8f, -14f, 14f);
-                float vy = Mathf.Clamp(Mathf.Abs(toTarget.x) * 0.45f + 5.5f, 5f, 10f);
+                float vx = dirX * Mathf.Clamp(Mathf.Abs(toTarget.x) * 1.35f, 8.5f, 13.5f);
+                float vy = Mathf.Clamp(toTarget.y * 0.6f + 4.8f, 3.5f, 8.5f);
                 Vector2 vel = Quaternion.Euler(0, 0, angleOffset) * new Vector2(vx, vy);
                 spit.Launch(vel);
             }
