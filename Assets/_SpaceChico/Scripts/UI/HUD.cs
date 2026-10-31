@@ -1,11 +1,11 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace SpaceChico
 {
     /// <summary>
-    /// HUD do jogo (GDD Seção 4 e 5).
+    /// HUD do jogo.
     /// Exibe Corações de Vida, Barra de Oxigênio, Cristais, Poder Equipado e Atalhos.
     /// </summary>
     public class HUD : MonoBehaviour

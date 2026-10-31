@@ -1,10 +1,10 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 namespace SpaceChico
 {
     /// <summary>
-    /// Tela de Conclusão da Fase (GDD Seção 7.2 e 8).
+    /// Tela de Conclusão da Fase.
     /// Mostra item recuperado, cristais, tempo de exploração e bônus de vida máxima.
     /// </summary>
     public class LevelCompleteUI : MonoBehaviour

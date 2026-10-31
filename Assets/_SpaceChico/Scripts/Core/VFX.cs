@@ -1,9 +1,9 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace SpaceChico
 {
     /// <summary>
-    /// Fábrica de efeitos de partículas (GDD Sprint 5.2). Cria Particle Systems
+    /// Fábrica de efeitos de partículas. Cria Particle Systems
     /// configurados por código para impactos, mortes e coletas.
     /// </summary>
     public static class VFX

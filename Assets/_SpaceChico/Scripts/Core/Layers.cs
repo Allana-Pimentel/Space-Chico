@@ -18,7 +18,7 @@ namespace SpaceChico
         public const string Hazard = "Hazard";
 
         public const string TagPlayer = "Player";
-        public const string TagEnemy = "Inimigo";   // conforme o GDD (Sprint 4.3)
+        public const string TagEnemy = "Inimigo";
         public const string TagGround = "Ground";
 
         public static readonly string[] All = { Ground, Player, Enemy, EnemyTrigger, Projectile, Pickup, Hazard };

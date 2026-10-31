@@ -1,131 +1,86 @@
 using UnityEngine;
-#if !ENABLE_LEGACY_INPUT_MANAGER && ENABLE_INPUT_SYSTEM
-using UnityEngine.InputSystem;
-#endif
 
 namespace SpaceChico
 {
-    /// <summary>Ações de entrada do jogo (GDD seção 4).</summary>
+    // Ações do jogador no teclado
     public enum GameAction
     {
-        Left,       // Seta Esquerda
-        Right,      // Seta Direita
-        Up,         // Seta Cima   (interagir / escalar)
-        Down,       // Seta Baixo  (agachar / descer vinha)
-        Jump,       // Barra de Espaço (pular / pulo esmagador)
-        Shoot,      // Tecla E
-        Power,      // Tecla F
-        Backpack,   // Tecla B
-        Pause,      // Esc
-        Confirm     // Enter / Espaço em menus
+        Left, Right, Up, Down, Jump, Shoot, Power, Backpack, Pause, Confirm
     }
 
-    /// <summary>
-    /// Camada fina sobre o sistema de input da Unity. Funciona tanto com o
-    /// Input Manager antigo quanto com o novo Input System, então o resto do
-    /// código nunca precisa saber qual está ativo.
-    /// </summary>
+    // Script simples para centralizar a leitura das teclas
     public static class GameInput
     {
-        public static bool Held(GameAction a)
+        // Retorna -1 (esquerda), 0 (parado) ou 1 (direita)
+        public static float Horizontal
         {
-            switch (a)
+            get
             {
-                case GameAction.Confirm: return K(KC.Return) || K(KC.KeypadEnter) || K(KC.Space);
-                default: return K(Map(a));
+                float h = 0f;
+                if (Held(GameAction.Right)) h += 1f;
+                if (Held(GameAction.Left)) h -= 1f;
+                return h;
             }
         }
 
-        public static bool Pressed(GameAction a)
+        // Retorna -1 (baixo), 0 (parado) ou 1 (cima)
+        public static float Vertical
         {
-            switch (a)
+            get
             {
-                case GameAction.Confirm: return D(KC.Return) || D(KC.KeypadEnter) || D(KC.Space);
-                default: return D(Map(a));
+                float v = 0f;
+                if (Held(GameAction.Up)) v += 1f;
+                if (Held(GameAction.Down)) v -= 1f;
+                return v;
             }
         }
 
-        public static bool Released(GameAction a)
+        // Verifica se a tecla está sendo segurada
+        public static bool Held(GameAction acao)
         {
-            switch (a)
+            switch (acao)
             {
-                case GameAction.Confirm: return U(KC.Return) || U(KC.KeypadEnter) || U(KC.Space);
-                default: return U(Map(a));
+                case GameAction.Left:     return Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A);
+                case GameAction.Right:    return Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D);
+                case GameAction.Up:       return Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W);
+                case GameAction.Down:     return Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S);
+                case GameAction.Jump:     return Input.GetKey(KeyCode.Space);
+                case GameAction.Shoot:    return Input.GetKey(KeyCode.E);
+                case GameAction.Power:    return Input.GetKey(KeyCode.F);
+                case GameAction.Backpack: return Input.GetKey(KeyCode.B) || Input.GetKey(KeyCode.I) || Input.GetKey(KeyCode.Tab);
+                case GameAction.Pause:    return Input.GetKey(KeyCode.Escape);
+                case GameAction.Confirm:  return Input.GetKey(KeyCode.Return) || Input.GetKey(KeyCode.Space);
+                default: return false;
             }
         }
 
-        /// <summary>-1, 0 ou +1 de acordo com as setas esquerda/direita.</summary>
-        public static float Horizontal => (Held(GameAction.Right) ? 1f : 0f) - (Held(GameAction.Left) ? 1f : 0f);
-
-        /// <summary>-1, 0 ou +1 de acordo com as setas baixo/cima.</summary>
-        public static float Vertical => (Held(GameAction.Up) ? 1f : 0f) - (Held(GameAction.Down) ? 1f : 0f);
-
-        // ------------------------------------------------------------------
-        enum KC { Left, Right, Up, Down, Space, E, F, B, Escape, Return, KeypadEnter }
-
-        static KC Map(GameAction a)
+        // Verifica se a tecla acabou de ser apertada neste frame
+        public static bool Pressed(GameAction acao)
         {
-            switch (a)
+            switch (acao)
             {
-                case GameAction.Left: return KC.Left;
-                case GameAction.Right: return KC.Right;
-                case GameAction.Up: return KC.Up;
-                case GameAction.Down: return KC.Down;
-                case GameAction.Jump: return KC.Space;
-                case GameAction.Shoot: return KC.E;
-                case GameAction.Power: return KC.F;
-                case GameAction.Backpack: return KC.B;
-                case GameAction.Pause: return KC.Escape;
-                default: return KC.Return;
+                case GameAction.Left:     return Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A);
+                case GameAction.Right:    return Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D);
+                case GameAction.Up:       return Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W);
+                case GameAction.Down:     return Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S);
+                case GameAction.Jump:     return Input.GetKeyDown(KeyCode.Space);
+                case GameAction.Shoot:    return Input.GetKeyDown(KeyCode.E);
+                case GameAction.Power:    return Input.GetKeyDown(KeyCode.F);
+                case GameAction.Backpack: return Input.GetKeyDown(KeyCode.B) || Input.GetKeyDown(KeyCode.I) || Input.GetKeyDown(KeyCode.Tab);
+                case GameAction.Pause:    return Input.GetKeyDown(KeyCode.Escape);
+                case GameAction.Confirm:  return Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Space);
+                default: return false;
             }
         }
 
-#if ENABLE_LEGACY_INPUT_MANAGER
-        static KeyCode ToKeyCode(KC k)
+        // Verifica se a tecla foi solta neste frame
+        public static bool Released(GameAction acao)
         {
-            switch (k)
+            switch (acao)
             {
-                case KC.Left: return KeyCode.LeftArrow;
-                case KC.Right: return KeyCode.RightArrow;
-                case KC.Up: return KeyCode.UpArrow;
-                case KC.Down: return KeyCode.DownArrow;
-                case KC.Space: return KeyCode.Space;
-                case KC.E: return KeyCode.E;
-                case KC.F: return KeyCode.F;
-                case KC.B: return KeyCode.B;
-                case KC.Escape: return KeyCode.Escape;
-                case KC.KeypadEnter: return KeyCode.KeypadEnter;
-                default: return KeyCode.Return;
+                case GameAction.Jump: return Input.GetKeyUp(KeyCode.Space);
+                default: return false;
             }
         }
-        static bool K(KC k) => Input.GetKey(ToKeyCode(k));
-        static bool D(KC k) => Input.GetKeyDown(ToKeyCode(k));
-        static bool U(KC k) => Input.GetKeyUp(ToKeyCode(k));
-#elif ENABLE_INPUT_SYSTEM
-        static Key ToKey(KC k)
-        {
-            switch (k)
-            {
-                case KC.Left: return Key.LeftArrow;
-                case KC.Right: return Key.RightArrow;
-                case KC.Up: return Key.UpArrow;
-                case KC.Down: return Key.DownArrow;
-                case KC.Space: return Key.Space;
-                case KC.E: return Key.E;
-                case KC.F: return Key.F;
-                case KC.B: return Key.B;
-                case KC.Escape: return Key.Escape;
-                case KC.KeypadEnter: return Key.NumpadEnter;
-                default: return Key.Enter;
-            }
-        }
-        static bool K(KC k) { var kb = Keyboard.current; return kb != null && kb[ToKey(k)].isPressed; }
-        static bool D(KC k) { var kb = Keyboard.current; return kb != null && kb[ToKey(k)].wasPressedThisFrame; }
-        static bool U(KC k) { var kb = Keyboard.current; return kb != null && kb[ToKey(k)].wasReleasedThisFrame; }
-#else
-        static bool K(KC k) => false;
-        static bool D(KC k) => false;
-        static bool U(KC k) => false;
-#endif
     }
 }

@@ -1,9 +1,9 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace SpaceChico
 {
     /// <summary>
-    /// Colisor "Ponto Fraco" no topo do inimigo (GDD Sprint 3.1).
+    /// Colisor "Ponto Fraco" no topo do inimigo.
     /// Quando atingido pelos pés do Chico (StompFoot), repassa o dano de esmagamento (2 de dano)
     /// e instrui o jogador a saltar para cima.
     /// </summary>
@@ -11,7 +11,7 @@ namespace SpaceChico
     public class WeakPoint : MonoBehaviour
     {
         public EnemyBase parentEnemy;
-        public int stompDamage = 2; // GDD Seção 13: Pulo Esmagador causa 2 de dano
+        public int stompDamage = 2; //Pulo Esmagador causa 2 de dano
         public float bounceForce = 12.5f;
 
         private void Reset()

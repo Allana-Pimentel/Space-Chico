@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -45,7 +45,7 @@ namespace SpaceChico
         public int count;
     }
 
-    /// <summary>A mochila do Chico (GDD: tecla B).</summary>
+    /// <summary>A mochila do Chico.</summary>
     public class Inventory : MonoBehaviour
     {
         public int capacity = 8;

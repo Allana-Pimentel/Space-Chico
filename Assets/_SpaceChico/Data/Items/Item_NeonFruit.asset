@@ -12,12 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 0}
   m_Name: Item_NeonFruit
   m_EditorClassIdentifier: Assembly-CSharp:SpaceChico:ItemData
-  id: Item_NeonFruit
-  displayName: Fruto de Neon
-  description: "Esp\xE9cime vegetal alien\xEDgena que restaura 1 ponto de vida ou
-    oxig\xEAnio."
-  icon: {fileID: 21300000, guid: 5ffdf01a75fd3f54d83cbc4927aab372, type: 3}
-  category: 2
+  id: 
+  displayName: 
+  description: 
+  icon: {fileID: 0}
+  category: 0
   power: 0
-  powerDuration: 0
-  accent: {r: 0.2, g: 1, b: 0.5, a: 1}
+  powerDuration: 6
+  accent: {r: 0.4, g: 1, b: 0.9, a: 1}

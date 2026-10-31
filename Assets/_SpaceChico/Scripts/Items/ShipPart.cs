@@ -1,9 +1,9 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace SpaceChico
 {
     /// <summary>
-    /// Peça principal da nave (GDD Sprint 1 e Seção 7.2).
+    /// Peça principal da nave.
     /// Ao tocar:
     /// 1. Zera a velocidade do jogador e aciona estado de comemoração.
     /// 2. Adiciona o item ao inventário.
@@ -49,7 +49,7 @@ namespace SpaceChico
         {
             collected = true;
 
-            // Sprint 1.2: Zera a velocidade do Rigidbody2D do jogador e aciona comemoração
+            //Zera a velocidade do Rigidbody2D do jogador e aciona comemoração
             player.TriggerCelebrate();
 
             // Adiciona o item ao inventário
@@ -68,7 +68,7 @@ namespace SpaceChico
             var sr = GetComponent<SpriteRenderer>();
             if (sr != null) sr.enabled = false;
 
-            // Sprint 1.3 / Seção 7.2: Transfere para a UI da mochila, congelando a cena (TimeScale = 0)
+            //Transfere para a UI da mochila, congelando a cena (TimeScale = 0)
             GameManager.Instance.OpenBackpack(itemData, () =>
             {
                 // Seção 7.2 Passo 4: Concede +1 Vida Máxima e conclui a fase

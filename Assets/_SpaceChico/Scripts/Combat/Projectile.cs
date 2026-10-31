@@ -1,9 +1,9 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace SpaceChico
 {
     /// <summary>
-    /// Projétil disparado pela arma do Chico (GDD Sprint 4).
+    /// Projétil disparado pela arma do Chico.
     /// Move-se em velocidade constante e causa 1 de dano ao colidir com inimigos.
     /// </summary>
     [RequireComponent(typeof(Rigidbody2D))]
@@ -56,7 +56,7 @@ namespace SpaceChico
             if (other.CompareTag(Layers.TagPlayer) || other.gameObject.layer == LayerMask.NameToLayer(Layers.Player))
                 return;
 
-            // Verifica se atingiu um inimigo (Sprint 4.3: tag "Inimigo" ou componente IDamageable)
+            // Verifica se atingiu um inimigo (tag "Inimigo" ou componente IDamageable)
             var damageable = other.GetComponent<IDamageable>();
             if (damageable == null)
             {

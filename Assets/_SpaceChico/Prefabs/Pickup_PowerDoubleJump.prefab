@@ -12,7 +12,6 @@ GameObject:
   - component: {fileID: 5394286564647846451}
   - component: {fileID: 914895945106421979}
   - component: {fileID: 7939669381298906640}
-  - component: {fileID: 2492656056844801334}
   m_Layer: 13
   m_Name: Pickup_PowerDoubleJump
   m_TagString: Untagged
@@ -147,18 +146,3 @@ MonoBehaviour:
   value: 1
   powerItemData: {fileID: 11400000, guid: 2fbff71a044d0474caed8a5e6d6ff8a8, type: 2}
   burstColor: {r: 0.4, g: 1, b: 0.8, a: 1}
---- !u!114 &2492656056844801334
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6502075973686839163}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SpaceChico.Bob
-  amplitude: {x: 0, y: 0.12}
-  speed: 2
-  useUnscaledTime: 0

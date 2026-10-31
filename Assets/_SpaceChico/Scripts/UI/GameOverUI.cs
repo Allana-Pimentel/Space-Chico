@@ -1,10 +1,10 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 namespace SpaceChico
 {
     /// <summary>
-    /// Tela de Game Over (GDD Seção 6).
+    /// Tela de Game Over.
     /// </summary>
     public class GameOverUI : MonoBehaviour
     {

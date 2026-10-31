@@ -1,10 +1,10 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 namespace SpaceChico
 {
     /// <summary>
-    /// Menu de Pausa (GDD Seção 4 e 6: acionado com Esc).
+    /// Menu de Pausa.
     /// Permite Continuar, Reiniciar ou Desistir (voltar ao menu).
     /// </summary>
     public class PauseMenuUI : MonoBehaviour

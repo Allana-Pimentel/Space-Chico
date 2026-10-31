@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using UnityEngine;
 
 namespace SpaceChico
 {
     /// <summary>
-    /// Gerencia a vida, oxigênio, pontuação e invulnerabilidade do Chico (GDD Seção 6 e 13).
+    /// Gerencia a vida, oxigênio, pontuação e invulnerabilidade do Chico.
     /// </summary>
     public class PlayerStats : MonoBehaviour
     {
@@ -16,13 +16,13 @@ namespace SpaceChico
         [Header("Oxigênio")]
         public float maxOxygen = 100f;
         public float currentOxygen;
-        public float oxygenDrainRate = 1.2f; // GDD Seção 6: perda gradual
+        public float oxygenDrainRate = 1.2f; //perda gradual
 
         [Header("Pontuação / Cristais")]
         public int crystals;
 
         [Header("Invulnerabilidade")]
-        public float invulnerabilityDuration = 1.5f; // GDD Seção 13: 1,5s após ser atingido
+        public float invulnerabilityDuration = 1.5f; //1,5s após ser atingido
         public bool isInvulnerable;
 
         private float invulnerableTimer;

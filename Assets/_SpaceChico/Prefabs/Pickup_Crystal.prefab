@@ -12,7 +12,6 @@ GameObject:
   - component: {fileID: 5270097177929859125}
   - component: {fileID: 7756564602899127339}
   - component: {fileID: 6481595678418206222}
-  - component: {fileID: 2604458289389467108}
   m_Layer: 13
   m_Name: Pickup_Crystal
   m_TagString: Untagged
@@ -147,18 +146,3 @@ MonoBehaviour:
   value: 1
   powerItemData: {fileID: 0}
   burstColor: {r: 0.8, g: 0.4, b: 1, a: 1}
---- !u!114 &2604458289389467108
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2750243901016984755}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SpaceChico.Bob
-  amplitude: {x: 0, y: 0.12}
-  speed: 2
-  useUnscaledTime: 0

@@ -1,11 +1,11 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace SpaceChico
 {
     /// <summary>
-    /// Abertura em rolagem vertical estilo Star Wars (GDD Seção 8: Storyboard Quadro 1).
+    /// Abertura em rolagem vertical estilo Star Wars.
     /// </summary>
     public class IntroCrawl : MonoBehaviour
     {

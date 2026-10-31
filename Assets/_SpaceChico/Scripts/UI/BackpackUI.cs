@@ -1,11 +1,11 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace SpaceChico
 {
     /// <summary>
-    /// Interface da Mochila / Inventário do Chico (GDD Seção 4 e 7.2: Tecla B).
+    /// Interface da Mochila / Inventário do Chico.
     /// Congela o jogo em TimeScale = 0, exibe itens e detalhes minuciosos.
     /// </summary>
     public class BackpackUI : MonoBehaviour

@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using UnityEngine;
 
 namespace SpaceChico
 {
     /// <summary>
-    /// Gerenciador de Poderes Temporários do Chico (GDD Seção 4, 5 e 7.1: Tecla F).
+    /// Gerenciador de Poderes Temporários do Chico.
     /// Controla Escudo (Shield) e Pulo Duplo (DoubleJump).
     /// </summary>
     public class PlayerPowers : MonoBehaviour

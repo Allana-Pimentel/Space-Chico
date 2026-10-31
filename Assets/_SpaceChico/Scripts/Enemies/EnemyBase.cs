@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine;
 
 namespace SpaceChico
@@ -78,7 +78,7 @@ namespace SpaceChico
         public abstract void Die();
 
         /// <summary>
-        /// Colisão lateral com o jogador (Sprint 3.3): retira vida do jogador caso não seja no ponto fraco.
+        /// Colisão lateral com o jogador (): retira vida do jogador caso não seja no ponto fraco.
         /// </summary>
         protected virtual void OnCollisionEnter2D(Collision2D collision)
         {

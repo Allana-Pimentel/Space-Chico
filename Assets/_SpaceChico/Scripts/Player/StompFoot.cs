@@ -1,9 +1,9 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace SpaceChico
 {
     /// <summary>
-    /// Colisor "Esmagador" nos pés do Chico (GDD Sprint 3.1).
+    /// Colisor "Esmagador" nos pés do Chico.
     /// Ativo quando o jogador está caindo (Fall).
     /// Ao encostar no Ponto Fraco de um inimigo, causa 2 de dano e faz o Chico pular novamente.
     /// </summary>

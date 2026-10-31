@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace SpaceChico
 {
-    /// <summary>Estados globais da partida (GDD 7.2).</summary>
+    /// <summary>Estados globais da partida.</summary>
     public enum GameState
     {
         Playing,        // TimeScale = 1
@@ -17,7 +17,7 @@ namespace SpaceChico
 
     /// <summary>
     /// Ponto central de controle do fluxo do jogo. É o ÚNICO lugar que altera
-    /// Time.timeScale, o que resolve o Risco Técnico 2 (Sistema de Pausa):
+    /// Time.timeScale:
     /// física, Animators, projéteis e partículas param juntos, enquanto a UI
     /// usa tempo "unscaled" para continuar animando.
     /// </summary>
@@ -153,7 +153,7 @@ namespace SpaceChico
             SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         }
 
-        /// <summary>Desistência (GDD seção 6): o jogador encerra a partida e volta ao menu.</summary>
+        /// <summary>Desistência: o jogador encerra a partida e volta ao menu.</summary>
         public void QuitToMenu()
         {
             Time.timeScale = 1f;

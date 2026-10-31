@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using UnityEngine;
 
@@ -6,49 +5,32 @@ namespace SpaceChico
 {
     public enum PlayerState
     {
-        Idle,
-        Run,
-        Jump,
-        Fall,
-        Hurt,
-        Dead,
-        Climbing,
-        Crouch,
-        Celebrate
+        Idle, Run, Jump, Fall, Hurt, Dead, Climbing, Crouch, Celebrate
     }
 
-    /// <summary>
-    /// Controlador principal do Space Chico (GDD Seção 4, 5, 7.1, 11 e 13).
-    /// Máquina de Estados Finitos (FSM) com física responsiva, coyote time,
-    /// jump buffer, pulo variável, pulo esmagador e suporte a vinhas.
-    /// </summary>
-    [RequireComponent(typeof(Rigidbody2D))]
-    [RequireComponent(typeof(Collider2D))]
-    [RequireComponent(typeof(PlayerStats))]
-    [RequireComponent(typeof(Inventory))]
+    // Controlador principal do jogador (movimentação, pulo, agachar e subir cipó)
     public class PlayerController : MonoBehaviour, IDamageable
     {
-        [Header("Movimentação Horizontal")]
+        [Header("Movimentação")]
         public float moveSpeed = 7.5f;
         public float acceleration = 45f;
         public float deceleration = 55f;
 
-        [Header("Pulo e Game Feel (Risco Técnico 1)")]
+        [Header("Pulo")]
         public float jumpForce = 13.5f;
         public float jumpCutMultiplier = 0.5f;
         public float fallGravityMultiplier = 2.4f;
         public float coyoteTime = 0.12f;
         public float jumpBufferTime = 0.15f;
 
-        [Header("Detecção de Chão")]
+        [Header("Chão e Cipó")]
         public Transform groundCheck;
         public Vector2 groundCheckSize = new Vector2(0.55f, 0.12f);
         public LayerMask groundLayer;
-
-        [Header("Escalar Vinhas")]
         public float climbSpeed = 4.5f;
+        public GameObject climbHintObject;
 
-        [Header("Sprites por Estado")]
+        [Header("Sprites")]
         public SpriteRenderer spriteRenderer;
         public Sprite spriteIdle;
         public Sprite spriteRunA;
@@ -58,18 +40,12 @@ namespace SpaceChico
         public Sprite spriteHurt;
         public Sprite spriteClimb;
         public Sprite spriteCelebrate;
-
-        [Header("Efeitos e Animações")]
         public float runAnimSpeed = 0.14f;
-
-        [Header("Usabilidade & Prompts Contextuais")]
-        [Tooltip("Balão ou texto indicador flutuante sobre a cabeça do Chico (ex: [W / ↑] Subir)")]
-        public GameObject climbHintObject;
 
         public PlayerState State { get; private set; } = PlayerState.Idle;
         public float Facing { get; private set; } = 1f;
         public bool IsGrounded { get; private set; }
-        public Vector2 CurrentVelocity => rb.linearVelocity;
+        public Vector2 CurrentVelocity => rb != null ? rb.linearVelocity : Vector2.zero;
 
         public PlayerStats Stats { get; private set; }
         public Inventory Inventory { get; private set; }
@@ -91,9 +67,7 @@ namespace SpaceChico
         private float initialColliderHeight = 1.4f;
         private float initialColliderOffsetY = 0.7f;
 
-        public event Action<PlayerState> StateChanged;
-
-        private void Awake()
+        void Awake()
         {
             rb = GetComponent<Rigidbody2D>();
             mainCollider = GetComponent<Collider2D>();
@@ -114,95 +88,48 @@ namespace SpaceChico
                 initialColliderHeight = capCol.size.y;
                 initialColliderOffsetY = capCol.offset.y;
             }
-
-            if (groundCheck == null)
-            {
-                var gc = new GameObject("GroundCheck");
-                gc.transform.SetParent(transform);
-                gc.transform.localPosition = new Vector3(0, -0.6f, 0);
-                groundCheck = gc.transform;
-            }
-
-            gameObject.tag = Layers.TagPlayer;
-            gameObject.layer = LayerMask.NameToLayer(Layers.Player);
         }
 
-        private void Start()
+        void Start()
         {
             if (groundLayer.value == 0) groundLayer = Layers.GroundMask;
             if (Stats != null) Stats.InvulnerabilityChanged += OnInvulnerabilityChanged;
         }
 
-        private void OnDestroy()
+        void OnDestroy()
         {
             if (Stats != null) Stats.InvulnerabilityChanged -= OnInvulnerabilityChanged;
         }
 
-        private void Update()
+        void Update()
         {
-            if (GameManager.Instance != null && !GameManager.Instance.IsGameplayRunning)
-                return;
-
-            if (State == PlayerState.Dead || State == PlayerState.Celebrate)
-                return;
+            if (GameManager.Instance != null && !GameManager.Instance.IsGameplayRunning) return;
+            if (State == PlayerState.Dead || State == PlayerState.Celebrate) return;
 
             CheckGrounded();
             HandleTimers();
             HandleInput();
-            UpdateFSM();
+            UpdateState();
             UpdateSprite();
-            UpdateContextHints();
+            UpdateClimbHint();
         }
 
-        private void UpdateContextHints()
+        void FixedUpdate()
         {
-            if (climbHintObject == null) return;
-
-            // Exibe a dica de subir somente quando estiver em contato com o cipó e não estiver já escalando
-            bool shouldShow = activeVine != null && State != PlayerState.Climbing && State != PlayerState.Dead && State != PlayerState.Hurt;
-            if (climbHintObject.activeSelf != shouldShow)
-            {
-                climbHintObject.SetActive(shouldShow);
-            }
-
-            // Impede que o texto fique espelhado se o Chico virar para a esquerda
-            if (shouldShow)
-            {
-                climbHintObject.transform.localScale = new Vector3(Facing, 1f, 1f);
-            }
-        }
-
-        private void FixedUpdate()
-        {
-            if (GameManager.Instance != null && !GameManager.Instance.IsGameplayRunning)
-                return;
-
-            if (State == PlayerState.Dead || State == PlayerState.Celebrate)
-            {
-                rb.linearVelocity = Vector2.zero;
-                return;
-            }
-
-            if (State == PlayerState.Hurt)
-            {
-                return; // Controle suspenso durante hurt knockback
-            }
+            if (GameManager.Instance != null && !GameManager.Instance.IsGameplayRunning) return;
+            if (State == PlayerState.Dead || State == PlayerState.Celebrate || State == PlayerState.Hurt) return;
 
             if (State == PlayerState.Climbing)
-            {
                 FixedUpdateClimbing();
-            }
             else
-            {
                 FixedUpdateMovement();
-            }
         }
 
-        private void CheckGrounded()
+        void CheckGrounded()
         {
             bool wasGrounded = IsGrounded;
-            Vector2 checkPos = groundCheck != null ? (Vector2)groundCheck.position : (Vector2)transform.position + Vector2.down * 0.5f;
-            IsGrounded = Physics2D.OverlapBox(checkPos, groundCheckSize, 0f, groundLayer) != null;
+            Vector2 pos = groundCheck != null ? (Vector2)groundCheck.position : (Vector2)transform.position + Vector2.down * 0.5f;
+            IsGrounded = Physics2D.OverlapBox(pos, groundCheckSize, 0f, groundLayer) != null;
 
             if (IsGrounded)
             {
@@ -211,12 +138,11 @@ namespace SpaceChico
                 if (!wasGrounded && State == PlayerState.Fall)
                 {
                     AudioManager.Play(Sfx.Land, 0.5f);
-                    VFX.Burst(checkPos, new Color(0.3f, 0.8f, 0.5f), 6, 1.5f, 0.12f, 0.2f);
                 }
             }
         }
 
-        private void HandleTimers()
+        void HandleTimers()
         {
             if (!IsGrounded) coyoteTimer -= Time.deltaTime;
             if (jumpBufferTimer > 0f) jumpBufferTimer -= Time.deltaTime;
@@ -224,28 +150,21 @@ namespace SpaceChico
             if (State == PlayerState.Hurt)
             {
                 hurtTimer -= Time.deltaTime;
-                if (hurtTimer <= 0f)
-                {
-                    ChangeState(IsGrounded ? PlayerState.Idle : PlayerState.Fall);
-                }
+                if (hurtTimer <= 0f) ChangeState(IsGrounded ? PlayerState.Idle : PlayerState.Fall);
             }
         }
 
-        private void HandleInput()
+        void HandleInput()
         {
-            // Pulo (Espaço) - Registra no buffer
+            // Guarda o comando de pulo no buffer
             if (GameInput.Pressed(GameAction.Jump))
-            {
                 jumpBufferTimer = jumpBufferTime;
-            }
 
-            // Pulo Variável: Soltar a barra de espaço corta a velocidade ascendente
+            // Soltar espaço cedo diminui o pulo
             if (GameInput.Released(GameAction.Jump) && rb.linearVelocity.y > 0f)
-            {
                 rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y * jumpCutMultiplier);
-            }
 
-            // Tentar Pular
+            // Executa o pulo normal ou pulo duplo
             if (jumpBufferTimer > 0f)
             {
                 if (coyoteTimer > 0f)
@@ -254,55 +173,41 @@ namespace SpaceChico
                 }
                 else if (canDoubleJump && Powers != null && Powers.IsDoubleJumpActive)
                 {
-                    // Pulo Duplo concedido pelo Power-up
                     canDoubleJump = false;
                     ExecuteJump();
-                    VFX.Burst(transform.position, new Color(1f, 0.9f, 0.3f), 12, 3f, 0.2f, 0.3f);
                 }
             }
 
-            // Interagir com Vinha (Setas Cima/Baixo ou W/S para agarrar e escalar)
-            if (activeVine != null)
+            // Subir no cipó ao apertar W ou Seta para Cima/Baixo
+            if (activeVine != null && Mathf.Abs(GameInput.Vertical) > 0.1f)
             {
-                float v = GameInput.Vertical;
-                if (Mathf.Abs(v) > 0.1f)
-                {
-                    if (State != PlayerState.Climbing && State != PlayerState.Hurt && State != PlayerState.Dead)
-                    {
-                        ChangeState(PlayerState.Climbing);
-                    }
-                }
+                if (State != PlayerState.Climbing && State != PlayerState.Hurt && State != PlayerState.Dead)
+                    ChangeState(PlayerState.Climbing);
             }
         }
 
-        private void ExecuteJump()
+        void ExecuteJump()
         {
             jumpBufferTimer = 0f;
             coyoteTimer = 0f;
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
             ChangeState(PlayerState.Jump);
             AudioManager.Play(Sfx.Jump);
-
-            if (groundCheck != null)
-            {
-                VFX.Burst(groundCheck.position, new Color(0.4f, 1f, 0.7f), 8, 2f, 0.15f, 0.25f);
-            }
         }
 
         public void BounceFromStomp(float force)
         {
-            // Impulso ao esmagar inimigo (GDD Sprint 3.2 e Seção 7.1)
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, force);
             ChangeState(PlayerState.Jump);
-            canDoubleJump = true; // Renova salto aéreo
-            GameManager.Hitstop(0.06f); // Micro congelamento de impacto tátil (Game Feel)
+            canDoubleJump = true;
+            GameManager.Hitstop(0.06f);
         }
 
-        private void FixedUpdateMovement()
+        void FixedUpdateMovement()
         {
             float inputH = GameInput.Horizontal;
 
-            // Agachar com Seta Baixo
+            // Agachar quando estiver no chão segurando para baixo
             if (IsGrounded && GameInput.Held(GameAction.Down) && Mathf.Abs(inputH) < 0.1f)
             {
                 if (State != PlayerState.Crouch) ChangeState(PlayerState.Crouch);
@@ -310,46 +215,34 @@ namespace SpaceChico
                 return;
             }
 
-            // Direção do personagem
+            // Vira o sprite do personagem para o lado que está andando
             if (Mathf.Abs(inputH) > 0.05f)
             {
                 Facing = Mathf.Sign(inputH);
-                float currScaleY = State == PlayerState.Crouch ? initialScaleY * 0.7f : initialScaleY;
-                transform.localScale = new Vector3(initialScaleX * Facing, currScaleY, transform.localScale.z);
+                float scaleY = State == PlayerState.Crouch ? initialScaleY * 0.7f : initialScaleY;
+                transform.localScale = new Vector3(initialScaleX * Facing, scaleY, transform.localScale.z);
             }
 
-            // Aceleração / Desaceleração horizontal fluida
             float targetSpeed = inputH * moveSpeed;
-            float accelRate = Mathf.Abs(targetSpeed) > 0.01f ? acceleration : deceleration;
-            float newSpeedX = Mathf.MoveTowards(rb.linearVelocity.x, targetSpeed, accelRate * Time.fixedDeltaTime);
+            float accel = Mathf.Abs(targetSpeed) > 0.01f ? acceleration : deceleration;
+            float newSpeedX = Mathf.MoveTowards(rb.linearVelocity.x, targetSpeed, accel * Time.fixedDeltaTime);
 
-            // Gravidade adaptativa & Apex Float (Game Feel / Responsividade)
+            // Ajuste de gravidade no ar (leve no topo do pulo e mais rápida na queda)
             float targetGravity = initialGravityScale;
-
             if (!IsGrounded && Mathf.Abs(rb.linearVelocity.y) < 1.4f)
-            {
-                // Ápice do salto: leve sustentação para permitir micro-ajustes de aterrissagem
                 targetGravity = initialGravityScale * 0.65f;
-            }
             else if (rb.linearVelocity.y < 0f)
-            {
-                // Queda rápida e responsiva (evita sensação de gravidade lunar)
                 targetGravity = initialGravityScale * fallGravityMultiplier;
-            }
-            rb.gravityScale = targetGravity;
 
+            rb.gravityScale = targetGravity;
             rb.linearVelocity = new Vector2(newSpeedX, rb.linearVelocity.y);
         }
 
-        private void FixedUpdateClimbing()
+        void FixedUpdateClimbing()
         {
             rb.gravityScale = 0f;
-            float v = GameInput.Vertical;
-            float h = GameInput.Horizontal;
+            rb.linearVelocity = new Vector2(GameInput.Horizontal * moveSpeed * 0.5f, GameInput.Vertical * climbSpeed);
 
-            rb.linearVelocity = new Vector2(h * moveSpeed * 0.5f, v * climbSpeed);
-
-            // Pulo para sair da vinha
             if (GameInput.Pressed(GameAction.Jump))
             {
                 ChangeState(PlayerState.Jump);
@@ -358,22 +251,18 @@ namespace SpaceChico
             }
         }
 
-        private void UpdateFSM()
+        void UpdateState()
         {
-            if (State == PlayerState.Hurt || State == PlayerState.Dead || State == PlayerState.Celebrate)
-                return;
+            if (State == PlayerState.Hurt || State == PlayerState.Dead || State == PlayerState.Celebrate) return;
 
             if (State == PlayerState.Climbing)
             {
-                // Se chegou ao topo (apoiado no chão) e anda para o lado ou pula, sai da escalada
                 if (IsGrounded && (Mathf.Abs(GameInput.Horizontal) > 0.1f || GameInput.Pressed(GameAction.Jump)))
                 {
                     ChangeState(PlayerState.Idle);
                     rb.gravityScale = initialGravityScale;
                     return;
                 }
-
-                // Se saiu da área da vinha, cai ou fica em pé se estiver no chão
                 if (activeVine == null)
                 {
                     ChangeState(IsGrounded ? PlayerState.Idle : PlayerState.Fall);
@@ -389,26 +278,11 @@ namespace SpaceChico
                     if (!GameInput.Held(GameAction.Down)) ChangeState(PlayerState.Idle);
                     return;
                 }
-
-                if (Mathf.Abs(rb.linearVelocity.x) > 0.2f)
-                {
-                    ChangeState(PlayerState.Run);
-                }
-                else
-                {
-                    ChangeState(PlayerState.Idle);
-                }
+                ChangeState(Mathf.Abs(rb.linearVelocity.x) > 0.2f ? PlayerState.Run : PlayerState.Idle);
             }
             else
             {
-                if (rb.linearVelocity.y > 0.1f)
-                {
-                    ChangeState(PlayerState.Jump);
-                }
-                else
-                {
-                    ChangeState(PlayerState.Fall);
-                }
+                ChangeState(rb.linearVelocity.y > 0.1f ? PlayerState.Jump : PlayerState.Fall);
             }
         }
 
@@ -416,7 +290,7 @@ namespace SpaceChico
         {
             if (State == newState) return;
 
-            // Restaura tamanho normal ao sair do agachado
+            // Volta ao tamanho normal ao sair do agachado
             if (State == PlayerState.Crouch && newState != PlayerState.Crouch)
             {
                 transform.localScale = new Vector3(initialScaleX * Facing, initialScaleY, transform.localScale.z);
@@ -429,7 +303,7 @@ namespace SpaceChico
 
             State = newState;
 
-            // Aplica agachamento visual e reduz o tamanho da hitbox
+            // Diminui o tamanho e o colisor quando agachado
             if (State == PlayerState.Crouch)
             {
                 transform.localScale = new Vector3(initialScaleX * Facing, initialScaleY * 0.7f, transform.localScale.z);
@@ -439,11 +313,9 @@ namespace SpaceChico
                     cap.offset = new Vector2(cap.offset.x, initialColliderOffsetY * 0.5f);
                 }
             }
-
-            StateChanged?.Invoke(newState);
         }
 
-        private void UpdateSprite()
+        void UpdateSprite()
         {
             if (spriteRenderer == null) return;
 
@@ -453,7 +325,6 @@ namespace SpaceChico
                 case PlayerState.Crouch:
                     if (spriteIdle != null) spriteRenderer.sprite = spriteIdle;
                     break;
-
                 case PlayerState.Run:
                     runAnimTimer += Time.deltaTime;
                     if (runAnimTimer >= runAnimSpeed)
@@ -461,87 +332,73 @@ namespace SpaceChico
                         runAnimTimer = 0f;
                         runAnimFrame = !runAnimFrame;
                         if (spriteRunA != null && spriteRunB != null)
-                        {
                             spriteRenderer.sprite = runAnimFrame ? spriteRunB : spriteRunA;
-                        }
                     }
                     break;
-
                 case PlayerState.Jump:
                     if (spriteJump != null) spriteRenderer.sprite = spriteJump;
                     break;
-
                 case PlayerState.Fall:
                     if (spriteFall != null) spriteRenderer.sprite = spriteFall;
-                    else if (spriteJump != null) spriteRenderer.sprite = spriteJump;
                     break;
-
                 case PlayerState.Hurt:
                     if (spriteHurt != null) spriteRenderer.sprite = spriteHurt;
                     break;
-
                 case PlayerState.Climbing:
                     if (spriteClimb != null) spriteRenderer.sprite = spriteClimb;
                     break;
-
                 case PlayerState.Celebrate:
                     if (spriteCelebrate != null) spriteRenderer.sprite = spriteCelebrate;
                     break;
             }
         }
 
+        void UpdateClimbHint()
+        {
+            if (climbHintObject == null) return;
+            bool show = activeVine != null && State != PlayerState.Climbing && State != PlayerState.Dead && State != PlayerState.Hurt;
+            if (climbHintObject.activeSelf != show) climbHintObject.SetActive(show);
+            if (show) climbHintObject.transform.localScale = new Vector3(Facing, 1f, 1f);
+        }
+
         public void TakeDamage(int damage, Vector2 hitDirection, GameObject damageSource)
         {
             if (State == PlayerState.Dead || Stats.IsInvulnerable) return;
-
-            // Se o escudo estiver ativo, absorve o dano totalmente
             if (Powers != null && Powers.IsShieldActive)
             {
                 AudioManager.Play(Sfx.Land);
-                VFX.Burst(transform.position, new Color(0.3f, 0.8f, 1f), 15, 3f, 0.25f, 0.4f);
                 return;
             }
 
             Stats.TakeDamage(damage);
             if (Stats.CurrentLife <= 0) return;
 
-            // Estado Hurt (GDD Seção 7.1)
             ChangeState(PlayerState.Hurt);
             hurtTimer = 0.28f;
 
-            // Repulsão (Knockback)
             rb.linearVelocity = Vector2.zero;
             Vector2 kb = (hitDirection.normalized + Vector2.up * 0.8f).normalized * 7.5f;
             rb.AddForce(kb, ForceMode2D.Impulse);
 
             AudioManager.Play(Sfx.Hurt);
             CameraFollow.Shake(0.25f, 0.2f);
-            GameManager.Hitstop(0.08f); // Pausa tátil no dano para feedback claro ao jogador
-            VFX.Burst(transform.position, new Color(1f, 0.3f, 0.3f), 12, 3f, 0.2f, 0.35f);
+            GameManager.Hitstop(0.08f);
         }
 
-        private void OnInvulnerabilityChanged(bool invuln)
+        void OnInvulnerabilityChanged(bool invuln)
         {
             if (invuln) StartCoroutine(FlashInvulnerable());
         }
 
-        private IEnumerator FlashInvulnerable()
+        IEnumerator FlashInvulnerable()
         {
             while (Stats != null && Stats.IsInvulnerable)
             {
-                if (spriteRenderer != null)
-                {
-                    spriteRenderer.color = new Color(1f, 1f, 1f, 0.3f);
-                }
+                if (spriteRenderer != null) spriteRenderer.color = new Color(1f, 1f, 1f, 0.3f);
                 yield return new WaitForSeconds(0.08f);
-
-                if (spriteRenderer != null)
-                {
-                    spriteRenderer.color = Color.white;
-                }
+                if (spriteRenderer != null) spriteRenderer.color = Color.white;
                 yield return new WaitForSeconds(0.08f);
             }
-
             if (spriteRenderer != null) spriteRenderer.color = Color.white;
         }
 
@@ -556,23 +413,11 @@ namespace SpaceChico
             ChangeState(PlayerState.Dead);
             rb.linearVelocity = Vector2.zero;
             rb.bodyType = RigidbodyType2D.Kinematic;
-
             if (spriteHurt != null && spriteRenderer != null) spriteRenderer.sprite = spriteHurt;
-
-            VFX.Burst(transform.position, new Color(1f, 0.4f, 0.4f), 25, 4.5f, 0.3f, 0.8f);
             GameManager.Instance.TriggerGameOver(reason);
         }
 
         public void RegisterVine(Vine v) => activeVine = v;
         public void UnregisterVine(Vine v) { if (activeVine == v) activeVine = null; }
-
-        private void OnDrawGizmosSelected()
-        {
-            if (groundCheck != null)
-            {
-                Gizmos.color = Color.green;
-                Gizmos.DrawWireCube(groundCheck.position, groundCheckSize);
-            }
-        }
     }
 }

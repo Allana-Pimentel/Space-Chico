@@ -1,10 +1,10 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 namespace SpaceChico
 {
     /// <summary>
-    /// Barra de vida imponente para o Chefe do Pântano (GDD Seção 13).
+    /// Barra de vida imponente para o Chefe do Pântano.
     /// Mostra o nome, a fase atual (Fase 1 vs Fase 2 Enfurecido) e anima o preenchimento de HP.
     /// </summary>
     public class BossHealthBarUI : MonoBehaviour

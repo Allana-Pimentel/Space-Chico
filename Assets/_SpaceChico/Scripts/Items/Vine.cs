@@ -1,9 +1,9 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace SpaceChico
 {
     /// <summary>
-    /// Vinha bioluminescente escalável (GDD Seção 4 e 7.1: Interagir com objeto vertical via Setas Cima/Baixo).
+    /// Vinha bioluminescente escalável.
     /// </summary>
     [RequireComponent(typeof(Collider2D))]
     public class Vine : MonoBehaviour

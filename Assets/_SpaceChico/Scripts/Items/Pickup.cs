@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace SpaceChico
 {
@@ -12,7 +12,7 @@ namespace SpaceChico
     }
 
     /// <summary>
-    /// Item secundário coletável instantaneamente ao contato (GDD Seção 5).
+    /// Item secundário coletável instantaneamente ao contato.
     /// Não pausa o jogo (TimeScale = 1). Destruído no contato.
     /// </summary>
     [RequireComponent(typeof(Collider2D))]

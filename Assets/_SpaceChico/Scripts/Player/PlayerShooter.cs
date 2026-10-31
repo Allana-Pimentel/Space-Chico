@@ -1,9 +1,9 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace SpaceChico
 {
     /// <summary>
-    /// Mecânica de Disparo da Arma (GDD Seção 4 e Sprint 4: Tecla E).
+    /// Mecânica de Disparo da Arma.
     /// Dispara à distância sem interromper o movimento atual.
     /// </summary>
     public class PlayerShooter : MonoBehaviour

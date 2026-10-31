@@ -12,12 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 0}
   m_Name: Item_Crystal
   m_EditorClassIdentifier: Assembly-CSharp:SpaceChico:ItemData
-  id: Item_Crystal
-  displayName: "Cristal Energ\xE9tico"
-  description: "Forma\xE7\xE3o geol\xF3gica transl\xFAcida que soma pontua\xE7\xE3o
-    gal\xE1ctica ao Chico."
-  icon: {fileID: 21300000, guid: ff2addc51688093438d9a055e782bb4d, type: 3}
-  category: 2
+  id: 
+  displayName: 
+  description: 
+  icon: {fileID: 0}
+  category: 0
   power: 0
-  powerDuration: 0
-  accent: {r: 0.8, g: 0.4, b: 1, a: 1}
+  powerDuration: 6
+  accent: {r: 0.4, g: 1, b: 0.9, a: 1}
