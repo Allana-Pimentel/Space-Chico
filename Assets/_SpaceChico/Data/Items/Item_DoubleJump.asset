@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp:SpaceChico:ItemData
   id: Item_DoubleJump
   displayName: Botas de Plasma
-  description: Permite efetuar um pulo duplo no ar durante 8 segundos.
+  description: Permite efetuar um pulo duplo no ar durante 45 segundos.
   icon: {fileID: 21300000, guid: 43f3cf724b374d5439b4a9fbf0633287, type: 3}
   category: 1
   power: 2
-  powerDuration: 8
+  powerDuration: 45
   accent: {r: 0.4, g: 1, b: 0.8, a: 1}

@@ -27,7 +27,7 @@ namespace SpaceChico
         public Transform groundCheck;
         public Vector2 groundCheckSize = new Vector2(0.55f, 0.12f);
         public LayerMask groundLayer;
-        public float climbSpeed = 4.5f;
+        public float climbSpeed = 4.6f;
         public GameObject climbHintObject;
 
         [Header("Sprites")]
@@ -61,6 +61,9 @@ namespace SpaceChico
         private float runAnimTimer;
         private bool runAnimFrame;
         private Vine activeVine;
+        private Collider2D ignoredPlatform;
+        private float climbAnimTimer;
+        private bool climbStepSide;
         private float hurtTimer;
         private float shootPoseTimer;
         private float initialScaleX;
@@ -107,6 +110,13 @@ namespace SpaceChico
             if (GameManager.Instance != null && !GameManager.Instance.IsGameplayRunning) return;
             if (State == PlayerState.Dead || State == PlayerState.Celebrate) return;
 
+            // Se cair em um buraco fora da fase, morre e reinicia
+            if (transform.position.y < -6.5f)
+            {
+                TriggerDeath("Chico caiu no abismo!");
+                return;
+            }
+
             CheckGrounded();
             HandleTimers();
             HandleInput();
@@ -129,8 +139,24 @@ namespace SpaceChico
         void CheckGrounded()
         {
             bool wasGrounded = IsGrounded;
-            Vector2 pos = groundCheck != null ? (Vector2)groundCheck.position : (Vector2)transform.position + Vector2.down * 0.5f;
-            IsGrounded = Physics2D.OverlapBox(pos, groundCheckSize, 0f, groundLayer) != null;
+            Vector2 pos = groundCheck != null ? (Vector2)groundCheck.position : (Vector2)transform.position + Vector2.down * 0.05f;
+            Collider2D[] hits = Physics2D.OverlapBoxAll(pos, groundCheckSize, 0f, groundLayer);
+
+            bool groundedNow = false;
+            for (int i = 0; i < hits.Length; i++)
+            {
+                Collider2D hit = hits[i];
+                if (hit == null || hit == ignoredPlatform) continue;
+
+                // Só considera no chão se os pés estiverem realmente no topo do piso/plataforma
+                if (rb.linearVelocity.y <= 0.5f && transform.position.y >= hit.bounds.max.y - 0.22f)
+                {
+                    groundedNow = true;
+                    break;
+                }
+            }
+
+            IsGrounded = groundedNow;
 
             if (IsGrounded)
             {
@@ -161,6 +187,11 @@ namespace SpaceChico
             shootPoseTimer = 0.22f;
         }
 
+        public void EnableDoubleJump()
+        {
+            canDoubleJump = true;
+        }
+
         void HandleInput()
         {
             // Guarda o comando de pulo no buffer
@@ -171,35 +202,53 @@ namespace SpaceChico
             if (GameInput.Released(GameAction.Jump) && rb.linearVelocity.y > 0f)
                 rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y * jumpCutMultiplier);
 
-            // Executa o pulo normal ou pulo duplo
-            if (jumpBufferTimer > 0f)
+            // Executa o pulo normal ou pulo duplo (quando fora da escada)
+            if (State != PlayerState.Climbing && jumpBufferTimer > 0f)
             {
                 if (coyoteTimer > 0f)
                 {
-                    ExecuteJump();
+                    ExecuteJump(false);
                 }
                 else if (canDoubleJump && Powers != null && Powers.IsDoubleJumpActive)
                 {
                     canDoubleJump = false;
-                    ExecuteJump();
+                    ExecuteJump(true);
                 }
             }
 
-            // Subir no cipó ao apertar W ou Seta para Cima/Baixo
-            if (activeVine != null && Mathf.Abs(GameInput.Vertical) > 0.1f)
+            // Subir ou descer no cipó ao apertar W/S ou Setas Cima/Baixo
+            if (activeVine != null && State != PlayerState.Climbing && State != PlayerState.Hurt && State != PlayerState.Dead)
             {
-                if (State != PlayerState.Climbing && State != PlayerState.Hurt && State != PlayerState.Dead)
+                bool wantsClimbUp = GameInput.Vertical > 0.1f && transform.position.y < activeVine.topY - 0.1f;
+                bool wantsClimbDown = GameInput.Vertical < -0.1f && transform.position.y > activeVine.bottomY + 0.3f;
+
+                if (wantsClimbUp || wantsClimbDown)
+                {
+                    if (wantsClimbDown && transform.position.y >= activeVine.topY - 0.2f)
+                    {
+                        // Desce suavemente atravessando a plataforma de mão única
+                        transform.position = new Vector3(activeVine.transform.position.x, activeVine.topY - 0.35f, transform.position.z);
+                    }
                     ChangeState(PlayerState.Climbing);
+                }
             }
         }
 
-        void ExecuteJump()
+        void ExecuteJump(bool isDoubleJump)
         {
             jumpBufferTimer = 0f;
             coyoteTimer = 0f;
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
+
+            float force = isDoubleJump ? jumpForce * 1.05f : jumpForce;
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, force);
             ChangeState(PlayerState.Jump);
             AudioManager.Play(Sfx.Jump);
+
+            if (isDoubleJump)
+            {
+                VFX.Burst(transform.position, new Color(0.3f, 1f, 0.85f), 16, 4f, 0.22f, 0.35f);
+                VFX.PopText(transform.position + Vector3.up * 0.4f, "PULO DUPLO!", new Color(0.4f, 1f, 0.85f), 0.75f);
+            }
         }
 
         public void BounceFromStomp(float force)
@@ -215,7 +264,7 @@ namespace SpaceChico
             float inputH = GameInput.Horizontal;
 
             // Agachar quando estiver no chão segurando para baixo
-            if (IsGrounded && GameInput.Held(GameAction.Down) && Mathf.Abs(inputH) < 0.1f)
+            if (IsGrounded && GameInput.Held(GameAction.Down) && Mathf.Abs(inputH) < 0.1f && activeVine == null)
             {
                 if (State != PlayerState.Crouch) ChangeState(PlayerState.Crouch);
                 rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
@@ -248,22 +297,99 @@ namespace SpaceChico
         void FixedUpdateClimbing()
         {
             rb.gravityScale = 0f;
+            canDoubleJump = true;
 
-            // Alinha suavemente o Chico ao centro do cipó quando está subindo/descendo
-            if (activeVine != null && Mathf.Abs(GameInput.Vertical) > 0.1f && Mathf.Abs(GameInput.Horizontal) < 0.1f)
+            if (activeVine == null)
             {
-                float targetX = Mathf.MoveTowards(transform.position.x, activeVine.transform.position.x, 6f * Time.fixedDeltaTime);
+                ExitClimbing(IsGrounded ? PlayerState.Idle : PlayerState.Fall);
+                return;
+            }
+
+            // Ignora colisão física com a plataforma enquanto está subindo/descendo pelo cipó
+            SetPlatformIgnore(activeVine.platformCollider, true);
+
+            float inputV = GameInput.Vertical;
+            float inputH = GameInput.Horizontal;
+
+            // Centraliza suavemente o Chico no cipó enquanto escala
+            if (Mathf.Abs(inputV) > 0.1f)
+            {
+                float targetX = Mathf.MoveTowards(transform.position.x, activeVine.transform.position.x, 8f * Time.fixedDeltaTime);
                 transform.position = new Vector3(targetX, transform.position.y, transform.position.z);
             }
 
-            rb.linearVelocity = new Vector2(GameInput.Horizontal * moveSpeed * 0.5f, GameInput.Vertical * climbSpeed);
+            // Ritmo realista de puxada na corda/cipó (pequena variação de impulso a cada braçada)
+            float pullPulse = Mathf.Abs(inputV) > 0.1f ? (1f + 0.18f * Mathf.Sin(Time.time * 18f)) : 0f;
+            float vy = inputV * climbSpeed * pullPulse;
+            float vx = inputH * moveSpeed * 0.35f;
 
-            if (GameInput.Pressed(GameAction.Jump))
+            // Chegou ao topo da plataforma subindo: desembarca suavemente em cima da plataforma
+            if (inputV > 0.1f && transform.position.y >= activeVine.topY - 0.08f)
             {
-                ChangeState(PlayerState.Jump);
-                rb.gravityScale = initialGravityScale;
-                rb.linearVelocity = new Vector2(Facing * moveSpeed * 0.8f, jumpForce * 0.85f);
+                SetPlatformIgnore(activeVine.platformCollider, false);
+                transform.position = new Vector3(transform.position.x, activeVine.topY + 0.03f, transform.position.z);
+                rb.linearVelocity = Vector2.zero;
+                IsGrounded = true;
+                AudioManager.Play(Sfx.Land, 0.45f);
+                ExitClimbing(PlayerState.Idle);
+                return;
             }
+
+            // Chegou ao chão descendo: pisa no chão suavemente
+            if (inputV < -0.1f && transform.position.y <= activeVine.bottomY + 0.15f)
+            {
+                SetPlatformIgnore(activeVine.platformCollider, false);
+                rb.linearVelocity = Vector2.zero;
+                IsGrounded = true;
+                ExitClimbing(PlayerState.Idle);
+                return;
+            }
+
+            rb.linearVelocity = new Vector2(vx, vy);
+
+            // Pular para sair do cipó
+            if (jumpBufferTimer > 0f || GameInput.Pressed(GameAction.Jump))
+            {
+                jumpBufferTimer = 0f;
+                SetPlatformIgnore(activeVine.platformCollider, false);
+                ExitClimbing(PlayerState.Jump);
+                if (Mathf.Abs(inputH) > 0.1f) Facing = Mathf.Sign(inputH);
+                rb.linearVelocity = new Vector2(Facing * moveSpeed * 0.85f, jumpForce * 0.9f);
+                AudioManager.Play(Sfx.Jump);
+            }
+        }
+
+        void SetPlatformIgnore(Collider2D platformCol, bool ignore)
+        {
+            if (mainCollider == null) return;
+
+            if (!ignore)
+            {
+                if (ignoredPlatform != null)
+                {
+                    Physics2D.IgnoreCollision(mainCollider, ignoredPlatform, false);
+                    ignoredPlatform = null;
+                }
+                return;
+            }
+
+            if (platformCol != null && ignoredPlatform != platformCol)
+            {
+                if (ignoredPlatform != null)
+                    Physics2D.IgnoreCollision(mainCollider, ignoredPlatform, false);
+
+                Physics2D.IgnoreCollision(mainCollider, platformCol, true);
+                ignoredPlatform = platformCol;
+            }
+        }
+
+        void ExitClimbing(PlayerState nextState)
+        {
+            SetPlatformIgnore(null, false);
+            if (spriteRenderer != null) spriteRenderer.flipX = false;
+            transform.localRotation = Quaternion.identity;
+            rb.gravityScale = initialGravityScale;
+            ChangeState(nextState);
         }
 
         void UpdateState()
@@ -272,16 +398,15 @@ namespace SpaceChico
 
             if (State == PlayerState.Climbing)
             {
-                if (IsGrounded && (Mathf.Abs(GameInput.Horizontal) > 0.1f || GameInput.Pressed(GameAction.Jump)))
+                // Se estiver com os pés no chão na base do cipó e andar para longe, sai da escalada
+                if (IsGrounded && Mathf.Abs(GameInput.Vertical) < 0.1f && Mathf.Abs(GameInput.Horizontal) > 0.2f)
                 {
-                    ChangeState(PlayerState.Idle);
-                    rb.gravityScale = initialGravityScale;
+                    ExitClimbing(PlayerState.Run);
                     return;
                 }
                 if (activeVine == null)
                 {
-                    ChangeState(IsGrounded ? PlayerState.Idle : PlayerState.Fall);
-                    rb.gravityScale = initialGravityScale;
+                    ExitClimbing(IsGrounded ? PlayerState.Idle : PlayerState.Fall);
                 }
                 return;
             }
@@ -304,6 +429,13 @@ namespace SpaceChico
         public void ChangeState(PlayerState newState)
         {
             if (State == newState) return;
+
+            if (State == PlayerState.Climbing && newState != PlayerState.Climbing)
+            {
+                SetPlatformIgnore(null, false);
+                if (spriteRenderer != null) spriteRenderer.flipX = false;
+                transform.localRotation = Quaternion.identity;
+            }
 
             // Volta ao tamanho normal ao sair do agachado
             if (State == PlayerState.Crouch && newState != PlayerState.Crouch)
@@ -366,6 +498,25 @@ namespace SpaceChico
                     break;
                 case PlayerState.Climbing:
                     if (spriteClimb != null) spriteRenderer.sprite = spriteClimb;
+
+                    // Animação realista de braçada ao subir/descer no cipó
+                    if (Mathf.Abs(GameInput.Vertical) > 0.1f)
+                    {
+                        climbAnimTimer += Time.deltaTime;
+                        if (climbAnimTimer >= 0.16f)
+                        {
+                            climbAnimTimer = 0f;
+                            climbStepSide = !climbStepSide;
+                            spriteRenderer.flipX = climbStepSide;
+                            transform.localRotation = Quaternion.Euler(0f, 0f, climbStepSide ? 4.5f : -4.5f);
+                            AudioManager.Play(Sfx.Land, 0.18f);
+                            VFX.Burst(transform.position + Vector3.up * 0.6f, new Color(0.35f, 0.9f, 0.45f), 2, 1.4f, 0.1f, 0.2f);
+                        }
+                    }
+                    else
+                    {
+                        transform.localRotation = Quaternion.identity;
+                    }
                     break;
                 case PlayerState.Celebrate:
                     if (spriteCelebrate != null) spriteRenderer.sprite = spriteCelebrate;
@@ -430,11 +581,14 @@ namespace SpaceChico
 
         public void TriggerDeath(string reason)
         {
+            if (State == PlayerState.Dead) return;
             ChangeState(PlayerState.Dead);
             rb.linearVelocity = Vector2.zero;
             rb.bodyType = RigidbodyType2D.Kinematic;
             if (spriteHurt != null && spriteRenderer != null) spriteRenderer.sprite = spriteHurt;
-            GameManager.Instance.TriggerGameOver(reason);
+            VFX.Burst(transform.position + Vector3.up * 0.5f, new Color(1f, 0.35f, 0.3f), 18, 4f, 0.22f, 0.45f);
+            VFX.PopText(transform.position + Vector3.up * 1.3f, reason, new Color(1f, 0.4f, 0.4f), 1.1f);
+            if (GameManager.Instance != null) GameManager.Instance.TriggerGameOver(reason);
         }
 
         public void RegisterVine(Vine v) => activeVine = v;

@@ -8,6 +8,7 @@ namespace SpaceChico
     {
         public float topY;
         public float bottomY;
+        public Collider2D platformCollider;
 
         private void Awake()
         {
@@ -15,19 +16,42 @@ namespace SpaceChico
             if (box != null)
             {
                 box.isTrigger = true;
-                box.size = new Vector2(1.4f, 7.1f);
-                box.offset = new Vector2(0f, 0.55f);
+                box.size = new Vector2(1.35f, 6.4f);
+                box.offset = new Vector2(0f, 0.25f);
             }
             CalculateBounds();
         }
 
-        private void CalculateBounds()
+        private void Start()
+        {
+            CalculateBounds();
+        }
+
+        public void CalculateBounds()
         {
             var col = GetComponent<Collider2D>();
             if (col != null)
             {
                 topY = col.bounds.max.y;
                 bottomY = col.bounds.min.y;
+
+                // Procura a plataforma logo acima do cipó para alinhar o topo exatamente com o piso dela
+                Collider2D[] hits = Physics2D.OverlapBoxAll(
+                    new Vector2(transform.position.x, topY - 0.4f),
+                    new Vector2(1.2f, 2.0f),
+                    0f,
+                    Layers.GroundMask
+                );
+
+                foreach (var h in hits)
+                {
+                    if (h != null && h != col && h.bounds.max.y > transform.position.y)
+                    {
+                        platformCollider = h;
+                        topY = h.bounds.max.y;
+                        break;
+                    }
+                }
             }
         }
 

@@ -1,26 +1,21 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace SpaceChico
 {
-    /// <summary>Estados globais da partida.</summary>
     public enum GameState
     {
-        Playing,        // TimeScale = 1
-        Cutscene,       // TimeScale = 1, mas o jogador não tem controle (intro, comemoração, morte)
-        Paused,         // TimeScale = 0 (Esc)
-        Backpack,       // TimeScale = 0 (B ou coleta de peça)
-        LevelComplete,  // TimeScale = 0
-        GameOver        // TimeScale = 0
+        Playing,
+        Cutscene,
+        Paused,
+        Backpack,
+        LevelComplete,
+        GameOver
     }
 
-    /// <summary>
-    /// Ponto central de controle do fluxo do jogo. É o ÚNICO lugar que altera
-    /// Time.timeScale:
-    /// física, Animators, projéteis e partículas param juntos, enquanto a UI
-    /// usa tempo "unscaled" para continuar animando.
-    /// </summary>
+    // Controlador geral do fluxo do jogo (pausa, vitória, derrota e reinício da fase)
     [DefaultExecutionOrder(-100)]
     public class GameManager : MonoBehaviour
     {
@@ -64,6 +59,16 @@ namespace SpaceChico
             Layers.ApplyCollisionMatrix();
         }
 
+        void Start()
+        {
+            // Na primeira vez que a fase abre, toca o vídeo/cutscene do Chico feliz na nave e caindo
+            if (IntroShipCutscene.DeveTocarIntro())
+            {
+                var intro = gameObject.AddComponent<IntroShipCutscene>();
+                intro.IniciarCutscene();
+            }
+        }
+
         void OnDestroy()
         {
             if (Instance == this) Instance = null;
@@ -79,7 +84,6 @@ namespace SpaceChico
             else if (GameInput.Pressed(GameAction.Backpack)) OpenBackpack(null, null);
         }
 
-        // ------------------------------------------------------------------
         public void SetState(GameState s)
         {
             State = s;
@@ -87,17 +91,13 @@ namespace SpaceChico
             StateChanged?.Invoke(s);
         }
 
-        /// <summary>
-        /// Micro-congelamento tátil de impacto (Hitstop / Game Feel).
-        /// Dá peso físico imediato aos acertos e danos sem quebrar a taxa de quadros.
-        /// </summary>
         public static void Hitstop(float duration = 0.06f)
         {
             if (Instance == null || Instance.State != GameState.Playing) return;
             Instance.StartCoroutine(Instance.HitstopRoutine(duration));
         }
 
-        private System.Collections.IEnumerator HitstopRoutine(float duration)
+        private IEnumerator HitstopRoutine(float duration)
         {
             Time.timeScale = 0.05f;
             yield return new WaitForSecondsRealtime(duration);
@@ -107,7 +107,6 @@ namespace SpaceChico
             }
         }
 
-        /// <summary>Abre a mochila (pausa o jogo). <paramref name="highlight"/> destaca um item recém-coletado.</summary>
         public void OpenBackpack(ItemData highlight, Action onClosed)
         {
             if (backpackUI == null) { onClosed?.Invoke(); return; }
@@ -117,7 +116,6 @@ namespace SpaceChico
             backpackUI.Open(player != null ? player.Inventory : null, highlight);
         }
 
-        /// <summary>Chamado pela BackpackUI quando o jogador fecha a mochila.</summary>
         public void CloseBackpack()
         {
             SetState(GameState.Playing);
@@ -153,9 +151,21 @@ namespace SpaceChico
         public void TriggerGameOver(string reason)
         {
             if (State == GameState.GameOver) return;
-            SetState(GameState.GameOver);
+            State = GameState.GameOver;
+            StateChanged?.Invoke(State);
             AudioManager.Play(Sfx.GameOver);
+
             if (gameOverUI != null) gameOverUI.Show(reason);
+
+            // Reinicia a fase automaticamente após uma breve pausa de morte
+            StartCoroutine(ReiniciarFaseAposMorte());
+        }
+
+        private IEnumerator ReiniciarFaseAposMorte()
+        {
+            Time.timeScale = 0.25f;
+            yield return new WaitForSecondsRealtime(1.1f);
+            RestartLevel();
         }
 
         public void RestartLevel()
@@ -164,7 +174,6 @@ namespace SpaceChico
             SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         }
 
-        /// <summary>Desistência: o jogador encerra a partida e volta ao menu.</summary>
         public void QuitToMenu()
         {
             Time.timeScale = 1f;
