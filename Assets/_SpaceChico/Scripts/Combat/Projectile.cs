@@ -62,12 +62,20 @@ namespace SpaceChico
         {
             if (hasHit) return;
 
-            if (other.CompareTag(Layers.TagPlayer) || other.gameObject.layer == LayerMask.NameToLayer(Layers.Player))
+            // Nunca acerta o próprio Chico nem colisores filhos dele (como o StompFoot)
+            if (other.CompareTag(Layers.TagPlayer)
+                || other.gameObject.layer == LayerMask.NameToLayer(Layers.Player)
+                || other.GetComponentInParent<PlayerController>() != null)
+            {
                 return;
+            }
 
             var damageable = other.GetComponent<IDamageable>();
             if (damageable == null)
                 damageable = other.GetComponentInParent<IDamageable>();
+
+            if (damageable is PlayerController)
+                return;
 
             if (damageable != null || other.CompareTag(Layers.TagEnemy))
             {

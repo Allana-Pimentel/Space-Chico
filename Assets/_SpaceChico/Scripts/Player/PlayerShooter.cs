@@ -47,7 +47,7 @@ namespace SpaceChico
             Vector2 fireDir = new Vector2(facing, 0f);
 
             // Posição da ponta da arma na direção em que o Chico está olhando
-            Vector3 spawnPos = transform.position + new Vector3(facing * 0.75f, 0.22f, 0f);
+            Vector3 spawnPos = transform.position + new Vector3(facing * 0.85f, 0.65f, 0f);
 
             if (player != null)
             {
