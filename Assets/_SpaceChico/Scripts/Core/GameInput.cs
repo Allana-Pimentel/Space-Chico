@@ -45,7 +45,7 @@ namespace SpaceChico
                 case GameAction.Up:       return Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W);
                 case GameAction.Down:     return Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S);
                 case GameAction.Jump:     return Input.GetKey(KeyCode.Space);
-                case GameAction.Shoot:    return Input.GetKey(KeyCode.E);
+                case GameAction.Shoot:    return Input.GetKey(KeyCode.E) || Input.GetKey(KeyCode.Z) || Input.GetKey(KeyCode.J) || Input.GetKey(KeyCode.Mouse0);
                 case GameAction.Power:    return Input.GetKey(KeyCode.F);
                 case GameAction.Backpack: return Input.GetKey(KeyCode.B) || Input.GetKey(KeyCode.I) || Input.GetKey(KeyCode.Tab);
                 case GameAction.Pause:    return Input.GetKey(KeyCode.Escape);
@@ -64,7 +64,7 @@ namespace SpaceChico
                 case GameAction.Up:       return Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W);
                 case GameAction.Down:     return Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S);
                 case GameAction.Jump:     return Input.GetKeyDown(KeyCode.Space);
-                case GameAction.Shoot:    return Input.GetKeyDown(KeyCode.E);
+                case GameAction.Shoot:    return Input.GetKeyDown(KeyCode.E) || Input.GetKeyDown(KeyCode.Z) || Input.GetKeyDown(KeyCode.J) || Input.GetKeyDown(KeyCode.Mouse0);
                 case GameAction.Power:    return Input.GetKeyDown(KeyCode.F);
                 case GameAction.Backpack: return Input.GetKeyDown(KeyCode.B) || Input.GetKeyDown(KeyCode.I) || Input.GetKeyDown(KeyCode.Tab);
                 case GameAction.Pause:    return Input.GetKeyDown(KeyCode.Escape);

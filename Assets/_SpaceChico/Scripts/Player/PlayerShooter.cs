@@ -1,20 +1,17 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace SpaceChico
 {
-    /// <summary>
-    /// Mecânica de Disparo da Arma.
-    /// Dispara à distância sem interromper o movimento atual.
-    /// </summary>
+    // Script de disparo da arma laser do Chico
     public class PlayerShooter : MonoBehaviour
     {
         [Header("Projétil")]
         public GameObject projectilePrefab;
         public Transform firePoint;
-        public float fireRate = 0.28f; // Cooldown entre disparos
+        public float fireRate = 0.25f;
 
         [Header("Efeitos")]
-        public Color muzzleColor = new Color(0.2f, 0.9f, 1f);
+        public Color muzzleColor = new Color(0.2f, 0.95f, 1f);
 
         private float nextFireTime;
         private PlayerController player;
@@ -26,7 +23,7 @@ namespace SpaceChico
             {
                 var fp = new GameObject("FirePoint");
                 fp.transform.SetParent(transform);
-                fp.transform.localPosition = new Vector3(0.55f, 0.15f, 0f);
+                fp.transform.localPosition = new Vector3(0.65f, 0.22f, 0f);
                 firePoint = fp.transform;
             }
         }
@@ -36,7 +33,6 @@ namespace SpaceChico
             if (GameManager.Instance != null && !GameManager.Instance.IsGameplayRunning) return;
             if (player != null && (player.State == PlayerState.Dead || player.State == PlayerState.Celebrate)) return;
 
-            // Disparo com Tecla E (GameAction.Shoot)
             if (GameInput.Pressed(GameAction.Shoot) && Time.time >= nextFireTime)
             {
                 Shoot();
@@ -50,7 +46,13 @@ namespace SpaceChico
             float facing = player != null ? player.Facing : Mathf.Sign(transform.localScale.x);
             Vector2 fireDir = new Vector2(facing, 0f);
 
-            Vector3 spawnPos = firePoint != null ? firePoint.position : transform.position + (Vector3)(fireDir * 0.5f);
+            // Posição da ponta da arma na direção em que o Chico está olhando
+            Vector3 spawnPos = transform.position + new Vector3(facing * 0.75f, 0.22f, 0f);
+
+            if (player != null)
+            {
+                player.NotifyShot();
+            }
 
             if (projectilePrefab != null)
             {
@@ -63,7 +65,6 @@ namespace SpaceChico
             }
             else
             {
-                // Fallback dinâmico caso prefab não esteja linkado
                 var go = new GameObject("Projectile_Dynamic");
                 go.transform.position = spawnPos;
                 var proj = go.AddComponent<Projectile>();
@@ -71,7 +72,7 @@ namespace SpaceChico
             }
 
             AudioManager.Play(Sfx.Shoot);
-            VFX.Burst(spawnPos, muzzleColor, 6, 2.5f, 0.12f, 0.15f);
+            VFX.Burst(spawnPos, muzzleColor, 10, 3.5f, 0.18f, 0.2f);
         }
     }
 }

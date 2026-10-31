@@ -1,25 +1,23 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace SpaceChico
 {
-    /// <summary>
-    /// Vinha bioluminescente escalável.
-    /// </summary>
+    // Cipó escalável da fase
     [RequireComponent(typeof(Collider2D))]
     public class Vine : MonoBehaviour
     {
         public float topY;
         public float bottomY;
 
-        private void Reset()
-        {
-            var col = GetComponent<Collider2D>();
-            if (col != null) col.isTrigger = true;
-            CalculateBounds();
-        }
-
         private void Awake()
         {
+            var box = GetComponent<BoxCollider2D>();
+            if (box != null)
+            {
+                box.isTrigger = true;
+                box.size = new Vector2(1.4f, 7.1f);
+                box.offset = new Vector2(0f, 0.55f);
+            }
             CalculateBounds();
         }
 
@@ -31,29 +29,20 @@ namespace SpaceChico
                 topY = col.bounds.max.y;
                 bottomY = col.bounds.min.y;
             }
-            else
-            {
-                topY = transform.position.y + 2f;
-                bottomY = transform.position.y - 2f;
-            }
         }
 
         private void OnTriggerEnter2D(Collider2D other)
         {
             var pc = other.GetComponent<PlayerController>();
-            if (pc != null)
-            {
-                pc.RegisterVine(this);
-            }
+            if (pc == null) pc = other.GetComponentInParent<PlayerController>();
+            if (pc != null) pc.RegisterVine(this);
         }
 
         private void OnTriggerExit2D(Collider2D other)
         {
             var pc = other.GetComponent<PlayerController>();
-            if (pc != null)
-            {
-                pc.UnregisterVine(this);
-            }
+            if (pc == null) pc = other.GetComponentInParent<PlayerController>();
+            if (pc != null) pc.UnregisterVine(this);
         }
     }
 }

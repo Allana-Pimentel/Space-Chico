@@ -62,6 +62,7 @@ namespace SpaceChico
         private bool runAnimFrame;
         private Vine activeVine;
         private float hurtTimer;
+        private float shootPoseTimer;
         private float initialScaleX;
         private float initialScaleY;
         private float initialColliderHeight = 1.4f;
@@ -146,12 +147,18 @@ namespace SpaceChico
         {
             if (!IsGrounded) coyoteTimer -= Time.deltaTime;
             if (jumpBufferTimer > 0f) jumpBufferTimer -= Time.deltaTime;
+            if (shootPoseTimer > 0f) shootPoseTimer -= Time.deltaTime;
 
             if (State == PlayerState.Hurt)
             {
                 hurtTimer -= Time.deltaTime;
                 if (hurtTimer <= 0f) ChangeState(IsGrounded ? PlayerState.Idle : PlayerState.Fall);
             }
+        }
+
+        public void NotifyShot()
+        {
+            shootPoseTimer = 0.22f;
         }
 
         void HandleInput()
@@ -241,6 +248,14 @@ namespace SpaceChico
         void FixedUpdateClimbing()
         {
             rb.gravityScale = 0f;
+
+            // Alinha suavemente o Chico ao centro do cipó quando está subindo/descendo
+            if (activeVine != null && Mathf.Abs(GameInput.Vertical) > 0.1f && Mathf.Abs(GameInput.Horizontal) < 0.1f)
+            {
+                float targetX = Mathf.MoveTowards(transform.position.x, activeVine.transform.position.x, 6f * Time.fixedDeltaTime);
+                transform.position = new Vector3(targetX, transform.position.y, transform.position.z);
+            }
+
             rb.linearVelocity = new Vector2(GameInput.Horizontal * moveSpeed * 0.5f, GameInput.Vertical * climbSpeed);
 
             if (GameInput.Pressed(GameAction.Jump))
@@ -322,6 +337,11 @@ namespace SpaceChico
             switch (State)
             {
                 case PlayerState.Idle:
+                    if (shootPoseTimer > 0f && spriteRunA != null)
+                        spriteRenderer.sprite = spriteRunA;
+                    else if (spriteIdle != null)
+                        spriteRenderer.sprite = spriteIdle;
+                    break;
                 case PlayerState.Crouch:
                     if (spriteIdle != null) spriteRenderer.sprite = spriteIdle;
                     break;

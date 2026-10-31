@@ -2160,7 +2160,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1959424951437397160, guid: 4a0fbaaea6eca874e95b36d1ecd144fe, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 3.8
+      value: 2.75
+      objectReference: {fileID: 0}
+    - target: {fileID: 1959424951437397160, guid: 4a0fbaaea6eca874e95b36d1ecd144fe, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1.28
       objectReference: {fileID: 0}
     - target: {fileID: 1959424951437397160, guid: 4a0fbaaea6eca874e95b36d1ecd144fe, type: 3}
       propertyPath: m_LocalPosition.z
@@ -2194,21 +2198,9 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 2056325753500695238, guid: 4a0fbaaea6eca874e95b36d1ecd144fe, type: 3}
-      propertyPath: m_Size.y
-      value: 7.8
-      objectReference: {fileID: 0}
     - target: {fileID: 2721124525435744152, guid: 4a0fbaaea6eca874e95b36d1ecd144fe, type: 3}
       propertyPath: m_Name
       value: Prop_Vine
-      objectReference: {fileID: 0}
-    - target: {fileID: 3382711297630274746, guid: 4a0fbaaea6eca874e95b36d1ecd144fe, type: 3}
-      propertyPath: m_Size.y
-      value: 7.8
-      objectReference: {fileID: 0}
-    - target: {fileID: 3382711297630274746, guid: 4a0fbaaea6eca874e95b36d1ecd144fe, type: 3}
-      propertyPath: m_SpriteTilingProperty.newSize.y
-      value: 7.8
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -2348,7 +2340,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1959424951437397160, guid: 4a0fbaaea6eca874e95b36d1ecd144fe, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 3.1
+      value: 2.15
+      objectReference: {fileID: 0}
+    - target: {fileID: 1959424951437397160, guid: 4a0fbaaea6eca874e95b36d1ecd144fe, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1.08
       objectReference: {fileID: 0}
     - target: {fileID: 1959424951437397160, guid: 4a0fbaaea6eca874e95b36d1ecd144fe, type: 3}
       propertyPath: m_LocalPosition.z
