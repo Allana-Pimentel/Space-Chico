@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -30,7 +30,7 @@ namespace SpaceChico
         public string levelName = "Pântano Bioluminescente";
         public string menuSceneName = "00_Intro";
 
-        [Header("Referências (preenchidas pelo builder)")]
+        [Header("Referências")]
         public PlayerController player;
         public HUD hud;
         public BackpackUI backpackUI;
@@ -45,6 +45,17 @@ namespace SpaceChico
         public bool IsGameplayRunning => State == GameState.Playing;
 
         Action pendingBackpackClosed;
+
+        // Se der Play com uma cena vazia aberta, carrega a fase principal automaticamente
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        static void EnsureValidScene()
+        {
+            Scene active = SceneManager.GetActiveScene();
+            if (string.IsNullOrEmpty(active.name) || (active.name != "00_Intro" && active.name != "01_Pantano"))
+            {
+                SceneManager.LoadScene("01_Pantano");
+            }
+        }
 
         void Awake()
         {
