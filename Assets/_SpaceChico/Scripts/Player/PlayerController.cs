@@ -253,7 +253,8 @@ namespace SpaceChico
 
         public void BounceFromStomp(float force)
         {
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, force);
+            float vx = Mathf.Abs(rb.linearVelocity.x) > 1.5f ? rb.linearVelocity.x : -Facing * 3.8f;
+            rb.linearVelocity = new Vector2(vx, force);
             ChangeState(PlayerState.Jump);
             canDoubleJump = true;
             GameManager.Hitstop(0.06f);
@@ -547,9 +548,9 @@ namespace SpaceChico
             ChangeState(PlayerState.Hurt);
             hurtTimer = 0.28f;
 
-            rb.linearVelocity = Vector2.zero;
-            Vector2 kb = (hitDirection.normalized + Vector2.up * 0.8f).normalized * 7.5f;
-            rb.AddForce(kb, ForceMode2D.Impulse);
+            float dirX = Mathf.Abs(hitDirection.x) > 0.1f ? Mathf.Sign(hitDirection.x) : -Facing;
+            rb.gravityScale = initialGravityScale;
+            rb.linearVelocity = new Vector2(dirX * 6.8f, 6.5f);
 
             AudioManager.Play(Sfx.Hurt);
             CameraFollow.Shake(0.25f, 0.2f);

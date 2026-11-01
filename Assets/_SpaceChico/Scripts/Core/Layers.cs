@@ -2,11 +2,7 @@ using UnityEngine;
 
 namespace SpaceChico
 {
-    /// <summary>
-    /// Nomes das layers e tags usadas no projeto. O builder cria as layers no
-    /// TagManager; aqui também configuramos a matriz de colisão em tempo de
-    /// execução para garantir que ela esteja sempre correta.
-    /// </summary>
+    // Configuração das Layers e Matriz de Colisão 2D do jogo
     public static class Layers
     {
         public const string Ground = "Ground";
@@ -34,6 +30,7 @@ namespace SpaceChico
             { Projectile, Pickup },
             { Projectile, Projectile },
             { Projectile, Hazard },
+            { EnemyTrigger, Ground },
             { EnemyTrigger, Enemy },
             { EnemyTrigger, EnemyTrigger },
             { EnemyTrigger, Pickup },
@@ -47,6 +44,22 @@ namespace SpaceChico
 
         public static void ApplyCollisionMatrix()
         {
+            // 1. Primeiro garante que TODAS as layers principais colidam entre si (incluindo Player x Enemy!)
+            for (int i = 0; i < All.Length; i++)
+            {
+                int layerA = LayerMask.NameToLayer(All[i]);
+                if (layerA < 0) continue;
+
+                Physics2D.IgnoreLayerCollision(0, layerA, false);
+                for (int j = i; j < All.Length; j++)
+                {
+                    int layerB = LayerMask.NameToLayer(All[j]);
+                    if (layerB < 0) continue;
+                    Physics2D.IgnoreLayerCollision(layerA, layerB, false);
+                }
+            }
+
+            // 2. Desativa apenas os pares que não devem colidir fisicamente
             for (int i = 0; i < IgnoredPairs.GetLength(0); i++)
             {
                 int a = LayerMask.NameToLayer(IgnoredPairs[i, 0]);
@@ -56,7 +69,7 @@ namespace SpaceChico
         }
     }
 
-    /// <summary>Progresso que sobrevive à troca de cena (ex.: +1 vida máxima por peça).</summary>
+    // Progresso salvo entre fases
     public static class ProgressData
     {
         public static int BonusMaxLife;

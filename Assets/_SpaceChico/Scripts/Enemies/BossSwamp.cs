@@ -19,16 +19,16 @@ namespace SpaceChico
         public Transform playerTransform;
 
         [Header("Movimentação")]
-        public float moveSpeedPhase1 = 2.2f;
-        public float moveSpeedPhase2 = 3.6f;
-        public float leapHorizontalSpeed = 6.0f;
+        public float moveSpeedPhase1 = 2.6f;
+        public float moveSpeedPhase2 = 4.0f;
+        public float leapHorizontalSpeed = 6.5f;
         public float leapJumpForce = 13.0f;
 
         [Header("Ataques")]
         public GameObject spitProjectilePrefab;
         public Transform spitMouthPoint;
-        public float spitCooldownPhase1 = 2.4f;
-        public float spitCooldownPhase2 = 1.6f;
+        public float spitCooldownPhase1 = 2.2f;
+        public float spitCooldownPhase2 = 1.4f;
 
         [Header("Sprites")]
         public Sprite spriteIdle;
@@ -51,12 +51,13 @@ namespace SpaceChico
         private float attackTimer;
         private float stateTimer;
         private int leapDirection = -1;
+        private float moveDirX = -1f;
 
         protected override void Awake()
         {
             maxHealth = 10;
             currentHealth = 10;
-            contactDamage = 2;
+            contactDamage = 1;
             base.Awake();
 
             if (weakPoint == null) weakPoint = GetComponentInChildren<WeakPoint>();
@@ -72,7 +73,7 @@ namespace SpaceChico
             if (playerTransform == null && GameManager.Instance != null && GameManager.Instance.player != null)
                 playerTransform = GameManager.Instance.player.transform;
 
-            attackTimer = 2.5f;
+            attackTimer = 2.0f;
             SetSprite(spriteIdle);
         }
 
@@ -140,26 +141,52 @@ namespace SpaceChico
                     rb.linearVelocity = new Vector2(leapDirection * leapHorizontalSpeed, rb.linearVelocity.y);
                     break;
             }
+
+            // Mantém o Boss dentro dos limites da arena
+            if (transform.position.x < arenaMinX)
+            {
+                transform.position = new Vector3(arenaMinX, transform.position.y, transform.position.z);
+                moveDirX = 1f;
+            }
+            else if (transform.position.x > arenaMaxX)
+            {
+                transform.position = new Vector3(arenaMaxX, transform.position.y, transform.position.z);
+                moveDirX = -1f;
+            }
         }
 
         float FacePlayer()
         {
-            float dirX = (playerTransform != null && playerTransform.position.x < transform.position.x) ? -1f : 1f;
-            if (spriteRenderer != null) spriteRenderer.flipX = dirX < 0f;
-            return dirX;
+            if (playerTransform != null)
+            {
+                float dx = playerTransform.position.x - transform.position.x;
+                if (Mathf.Abs(dx) > 0.6f) moveDirX = Mathf.Sign(dx);
+            }
+            if (spriteRenderer != null) spriteRenderer.flipX = moveDirX < 0f;
+            return moveDirX;
         }
 
         void UpdateMoveToPlayer()
         {
             if (playerTransform == null) return;
 
+            float dx = playerTransform.position.x - transform.position.x;
             float dirX = FacePlayer();
-            float speed = isPhase2 ? moveSpeedPhase2 : moveSpeedPhase1;
+
+            // Se o Chico estiver muito perto ou tentando ficar na mesma posição, o Boss avança com mais força para atropelar
+            float baseSpeed = isPhase2 ? moveSpeedPhase2 : moveSpeedPhase1;
+            float speed = Mathf.Abs(dx) < 2.2f ? baseSpeed * 1.35f : baseSpeed;
             rb.linearVelocity = new Vector2(dirX * speed, rb.linearVelocity.y);
+
+            // Se o Chico ficar colado no Boss, o Boss salta ou cospe mais rápido
+            if (Mathf.Abs(dx) < 1.8f && attackTimer > 0.45f)
+            {
+                attackTimer = 0.45f;
+            }
 
             if (attackTimer <= 0f)
             {
-                if (isPhase2 && UnityEngine.Random.value > 0.55f)
+                if ((isPhase2 || Mathf.Abs(dx) < 2.5f) && UnityEngine.Random.value > 0.45f)
                     StartLeapAttack();
                 else
                     StartSpitAttack();
@@ -170,7 +197,7 @@ namespace SpaceChico
         {
             state = BossState.SpitAttack;
             rb.linearVelocity = Vector2.zero;
-            stateTimer = 0.75f;
+            stateTimer = 0.7f;
             attackTimer = isPhase2 ? spitCooldownPhase2 : spitCooldownPhase1;
 
             FacePlayer();
@@ -207,7 +234,7 @@ namespace SpaceChico
             {
                 Vector2 targetPos = playerTransform != null ? (Vector2)playerTransform.position : (Vector2)transform.position + new Vector2(dirX * 7f, 0f);
                 Vector2 toTarget = targetPos - (Vector2)spawnPos;
-                float vx = dirX * Mathf.Clamp(Mathf.Abs(toTarget.x) * 1.35f, 8.5f, 13.5f);
+                float vx = dirX * Mathf.Clamp(Mathf.Abs(toTarget.x) * 1.35f, 7.5f, 13.5f);
                 float vy = Mathf.Clamp(toTarget.y * 0.6f + 4.8f, 3.5f, 8.5f);
                 Vector2 vel = Quaternion.Euler(0, 0, angleOffset) * new Vector2(vx, vy);
                 spit.Launch(vel);
@@ -218,15 +245,15 @@ namespace SpaceChico
         {
             state = BossState.LeapWindup;
             rb.linearVelocity = Vector2.zero;
-            stateTimer = 0.6f;
-            attackTimer = spitCooldownPhase2 + 1.2f;
+            stateTimer = 0.45f;
+            attackTimer = (isPhase2 ? spitCooldownPhase2 : spitCooldownPhase1) + 0.8f;
             SetSprite(spriteHurt);
         }
 
         void ExecuteLeap()
         {
             state = BossState.LeapAirborne;
-            float dirX = playerTransform != null ? Mathf.Sign(playerTransform.position.x - transform.position.x) : -1f;
+            float dirX = FacePlayer();
             leapDirection = (int)dirX;
 
             SetSprite(spriteAttack);
@@ -285,11 +312,11 @@ namespace SpaceChico
                 originalColor = new Color(1f, 0.85f, 0.7f);
             }
 
-            yield return new WaitForSeconds(1.6f);
+            yield return new WaitForSeconds(1.4f);
 
             SetSprite(spriteIdle);
             state = BossState.MoveToPlayer;
-            attackTimer = 1.0f;
+            attackTimer = 0.8f;
         }
 
         public override void Die()

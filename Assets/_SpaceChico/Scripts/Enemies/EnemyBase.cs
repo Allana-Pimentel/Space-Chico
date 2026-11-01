@@ -1,12 +1,8 @@
-﻿using System;
 using UnityEngine;
 
 namespace SpaceChico
 {
-    /// <summary>
-    /// Classe base para inimigos alienígenas no Space Chico.
-    /// Implementa IDamageable, tratamento de vida, knockback, flash de dano e colisão com o jogador.
-    /// </summary>
+    // Classe base para todos os inimigos (Lesma e Boss)
     [RequireComponent(typeof(Rigidbody2D))]
     public abstract class EnemyBase : MonoBehaviour, IDamageable
     {
@@ -21,6 +17,7 @@ namespace SpaceChico
         public Color deathColor = new Color(0.3f, 1f, 0.5f, 0.9f);
 
         protected Rigidbody2D rb;
+        protected Collider2D bodyCollider;
         protected bool isDead;
         protected Color originalColor = Color.white;
         protected float hitFlashTimer;
@@ -30,10 +27,14 @@ namespace SpaceChico
         protected virtual void Awake()
         {
             rb = GetComponent<Rigidbody2D>();
+            bodyCollider = GetComponent<Collider2D>();
             if (spriteRenderer == null) spriteRenderer = GetComponentInChildren<SpriteRenderer>();
             if (spriteRenderer != null) originalColor = spriteRenderer.color;
             currentHealth = maxHealth;
             gameObject.tag = Layers.TagEnemy;
+
+            int enemyLayer = LayerMask.NameToLayer(Layers.Enemy);
+            if (enemyLayer >= 0) gameObject.layer = enemyLayer;
         }
 
         protected virtual void Update()
@@ -44,6 +45,49 @@ namespace SpaceChico
                 if (hitFlashTimer <= 0f && spriteRenderer != null)
                 {
                     spriteRenderer.color = originalColor;
+                }
+            }
+        }
+
+        protected virtual void FixedUpdate()
+        {
+            if (isDead || bodyCollider == null) return;
+
+            PlayerController player = GameManager.Instance != null ? GameManager.Instance.player : null;
+            if (player == null || player.State == PlayerState.Dead) return;
+
+            Bounds eb = bodyCollider.bounds;
+            Vector3 pPos = player.transform.position;
+
+            // Verifica se o jogador está encostando, sobreposto ou parado em cima do inimigo
+            float margemX = eb.extents.x + 0.42f;
+            float dx = pPos.x - eb.center.x;
+            bool dentroX = Mathf.Abs(dx) < margemX;
+            bool dentroY = pPos.y >= eb.min.y - 0.15f && pPos.y <= eb.max.y + 0.35f;
+
+            if (dentroX && dentroY)
+            {
+                // Se o jogador estiver caindo rápido de cima para esmagar o WeakPoint, deixa o StompFoot agir
+                bool caindoParaStomp = player.CurrentVelocity.y < -1.5f && pPos.y >= eb.max.y - 0.15f;
+                if (!caindoParaStomp)
+                {
+                    // Ataca o jogador imediatamente
+                    float dirX = Mathf.Abs(dx) > 0.05f ? Mathf.Sign(dx) : -player.Facing;
+                    Vector2 hitDir = new Vector2(dirX, 0.65f).normalized;
+                    player.TakeDamage(contactDamage, hitDir, gameObject);
+
+                    // Impede que o jogador fique parado em cima da cabeça do inimigo ou se sobreponha a ele
+                    Rigidbody2D prb = player.GetComponent<Rigidbody2D>();
+                    if (prb != null)
+                    {
+                        float alvoX = eb.center.x + dirX * (margemX + 0.08f);
+                        float novoX = Mathf.MoveTowards(pPos.x, alvoX, 14f * Time.fixedDeltaTime);
+                        player.transform.position = new Vector3(novoX, pPos.y, pPos.z);
+                        if (Mathf.Sign(prb.linearVelocity.x) != dirX || Mathf.Abs(prb.linearVelocity.x) < 4.5f)
+                        {
+                            prb.linearVelocity = new Vector2(dirX * 6.0f, Mathf.Max(prb.linearVelocity.y, 3.5f));
+                        }
+                    }
                 }
             }
         }
@@ -59,9 +103,8 @@ namespace SpaceChico
             {
                 Die();
             }
-            else
+            else if (rb != null)
             {
-                // Leve empurrão
                 rb.AddForce(hitDirection * 3f, ForceMode2D.Impulse);
             }
         }
@@ -77,22 +120,35 @@ namespace SpaceChico
 
         public abstract void Die();
 
-        /// <summary>
-        /// Colisão lateral com o jogador (): retira vida do jogador caso não seja no ponto fraco.
-        /// </summary>
         protected virtual void OnCollisionEnter2D(Collision2D collision)
         {
-            if (isDead) return;
+            TryAttackPlayer(collision.gameObject);
+        }
 
-            if (collision.gameObject.CompareTag(Layers.TagPlayer) || collision.gameObject.layer == LayerMask.NameToLayer(Layers.Player))
+        protected virtual void OnCollisionStay2D(Collision2D collision)
+        {
+            TryAttackPlayer(collision.gameObject);
+        }
+
+        protected void TryAttackPlayer(GameObject obj)
+        {
+            if (isDead || obj == null) return;
+
+            PlayerController player = obj.GetComponent<PlayerController>();
+            if (player == null) player = obj.GetComponentInParent<PlayerController>();
+
+            if (player != null)
             {
-                var damageable = collision.gameObject.GetComponent<IDamageable>();
-                if (damageable != null)
+                float topoY = bodyCollider != null ? bodyCollider.bounds.max.y : transform.position.y + 0.5f;
+                if (player.CurrentVelocity.y < -1.5f && player.transform.position.y >= topoY - 0.15f)
                 {
-                    Vector2 hitDir = (collision.transform.position - transform.position).normalized;
-                    if (hitDir.sqrMagnitude < 0.01f) hitDir = Vector2.up + Vector2.right;
-                    damageable.TakeDamage(contactDamage, hitDir, gameObject);
+                    return;
                 }
+
+                float dx = player.transform.position.x - transform.position.x;
+                float dirX = Mathf.Abs(dx) > 0.05f ? Mathf.Sign(dx) : -player.Facing;
+                Vector2 hitDir = new Vector2(dirX, 0.65f).normalized;
+                player.TakeDamage(contactDamage, hitDir, gameObject);
             }
         }
     }

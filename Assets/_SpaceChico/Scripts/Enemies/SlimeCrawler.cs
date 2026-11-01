@@ -4,25 +4,25 @@ namespace SpaceChico
 {
     public enum SlimeState { Patrol, Chase, Dead }
 
-    // Inimigo básico que patrulha entre dois pontos (pointA e pointB)
+    // Inimigo básico que patrulha entre dois pontos e persegue/ataca o Chico
     public class SlimeCrawler : EnemyBase
     {
         [Header("Patrulha")]
-        public float patrolSpeed = 1.6f;
-        public float chaseSpeed = 2.8f;
+        public float patrolSpeed = 1.8f;
+        public float chaseSpeed = 3.2f;
         public Transform pointA;
         public Transform pointB;
         public float waypointDistanceThreshold = 0.3f;
 
         [Header("Detecção")]
-        public float detectionRadius = 4.5f;
+        public float detectionRadius = 5.0f;
         public LayerMask playerLayer;
 
         [Header("Sprites")]
         public Sprite spriteMoveA;
         public Sprite spriteMoveB;
         public Sprite spriteSquished;
-        public float animSpeed = 0.3f;
+        public float animSpeed = 0.25f;
 
         public SlimeState State { get; private set; } = SlimeState.Patrol;
 
@@ -31,6 +31,7 @@ namespace SpaceChico
         private float animTimer;
         private bool animFrame;
         private float initialScaleX;
+        private float moveDir = 1f;
 
         protected override void Awake()
         {
@@ -67,7 +68,7 @@ namespace SpaceChico
             if (isDead) return;
             base.Update();
 
-            // Verifica se o jogador está perto para perseguir
+            // Verifica se o jogador está perto para perseguir e atacar
             Collider2D hit = Physics2D.OverlapCircle(transform.position, detectionRadius, playerLayer);
             if (hit != null)
             {
@@ -95,15 +96,24 @@ namespace SpaceChico
             if (Mathf.Abs(transform.position.x - targetPoint.position.x) <= waypointDistanceThreshold)
                 targetPoint = (targetPoint == pointA) ? pointB : pointA;
 
-            float dir = Mathf.Sign(targetPoint.position.x - transform.position.x);
-            Move(dir, patrolSpeed);
+            moveDir = Mathf.Sign(targetPoint.position.x - transform.position.x);
+            Move(moveDir, patrolSpeed);
         }
 
         void UpdateChase()
         {
             if (playerTarget == null) return;
-            float dir = Mathf.Sign(playerTarget.position.x - transform.position.x);
-            Move(dir, chaseSpeed);
+
+            float dx = playerTarget.position.x - transform.position.x;
+            // Só inverte a direção quando o jogador está realmente de um lado (evita travar na mesma posição X!)
+            if (Mathf.Abs(dx) > 0.35f)
+            {
+                moveDir = Mathf.Sign(dx);
+            }
+
+            // Quando está bem perto do Chico, dá um bote mais rápido para atacar
+            float speed = Mathf.Abs(dx) < 1.2f ? chaseSpeed * 1.25f : chaseSpeed;
+            Move(moveDir, speed);
         }
 
         void Move(float dir, float speed)
