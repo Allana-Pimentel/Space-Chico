@@ -17,11 +17,59 @@ namespace SpaceChico
         {
             public RectTransform rt;
             public Text txt;
+            public PerspectivaStarWarsEffect efeitoPerspectiva;
             public Vector2 posBase;
             public bool foiAtropelado;
             public Vector2 velocidadeVoando;
             public float velocidadeGiro;
             public float anguloAtual;
+        }
+
+        // Deforma os vértices do texto em um trapézio 3D real inclinado para o fundo do espaço (estilo Star Wars clássico!)
+        private class PerspectivaStarWarsEffect : BaseMeshEffect
+        {
+            public float yCentroParagrafo;
+            public bool ativo = true;
+
+            public static float CalcularEscalaPerspectiva(float yPlano)
+            {
+                float u = Mathf.Clamp((yPlano + 520f) / 1040f, -0.25f, 1.25f);
+                return 1.32f / (1f + Mathf.Max(-0.30f, u) * 2.15f);
+            }
+
+            public static float CalcularScreenY(float yPlano)
+            {
+                float u = Mathf.Clamp((yPlano + 520f) / 1040f, -0.25f, 1.25f);
+                return -490f + 860f * ((u * 1.85f) / (1f + Mathf.Max(0f, u) * 0.85f));
+            }
+
+            public override void ModifyMesh(VertexHelper vh)
+            {
+                if (!IsActive() || !ativo) return;
+
+                int count = vh.currentVertCount;
+                UIVertex v = new UIVertex();
+                for (int i = 0; i < count; i++)
+                {
+                    vh.PopulateUIVertex(ref v, i);
+
+                    float yPlano = yCentroParagrafo + v.position.y;
+                    float u = (yPlano + 520f) / 1040f;
+                    float persp = CalcularEscalaPerspectiva(yPlano);
+                    float screenY = CalcularScreenY(yPlano);
+
+                    v.position.x *= persp;
+                    v.position.y = screenY - yCentroParagrafo;
+
+                    float alphaTop = Mathf.Clamp01(1f - (u - 0.78f) / 0.22f);
+                    float alphaBot = Mathf.Clamp01((u + 0.05f) / 0.10f);
+                    Color32 c = v.color;
+                    c.a = (byte)Mathf.RoundToInt(c.a * alphaTop * alphaBot);
+                    v.color = c;
+
+                    vh.SetUIVertex(v, i);
+                }
+            }
         }
 
         private class ParticulaFumacaUI
@@ -198,29 +246,30 @@ namespace SpaceChico
             logoShadow.effectColor = new Color(0f, 0f, 0f, 0.95f);
             logoShadow.effectDistance = new Vector2(5f, -5f);
 
-            // 5. Parágrafos independentes do texto Star Wars (para serem espalhados um por um pela nave!)
+            // 5. Parágrafos independentes do texto Star Wars (com inclinação trapezoidal 3D real!)
             GameObject crawlRoot = new GameObject("StarWarsCrawlRoot");
             crawlRoot.transform.SetParent(canvasObj.transform, false);
             crawlRootRt = crawlRoot.AddComponent<RectTransform>();
             crawlRootRt.anchorMin = new Vector2(0.5f, 0.5f);
             crawlRootRt.anchorMax = new Vector2(0.5f, 0.5f);
-            crawlRootRt.sizeDelta = new Vector2(1200f, 1000f);
-            crawlRootRt.anchoredPosition = new Vector2(0f, -620f);
-            crawlRootRt.localRotation = Quaternion.Euler(28f, 0f, 0f);
+            crawlRootRt.sizeDelta = new Vector2(1400f, 1080f);
+            crawlRootRt.anchoredPosition = Vector2.zero;
+            crawlRootRt.localRotation = Quaternion.identity;
 
             string[] textosHistoria = new string[]
             {
-                "— Capítulo I: O Pântano Bioluminescente —",
-                "O destemido felino interestelar CHICO viajava feliz\npelo cosmos a bordo de sua nave exploradora.",
-                "De repente, uma pane catastrófica no propulsor\nfez a espaçonave perder o controle no espaço!",
-                "Atraída pela gravidade de um planeta selvagem,\na nave mergulhou em chamas na atmosfera densa...",
-                "Agora Chico precisa sobreviver à queda e recuperar o\nPROPULSOR QUÂNTICO para voltar às estrelas!"
+                "EPISÓDIO I",
+                "O PÂNTANO BIOLUMINESCENTE",
+                "É uma era de grandes viagens espaciais. O destemido\ngatinho astronauta CHICO cruzava a galáxia feliz\na bordo de sua moderna nave exploradora.",
+                "De repente, uma pane misteriosa no propulsor quântico\nfez os motores falharem, deixando a espaçonave\ntotalmente desgovernada pelo espaço profundo!",
+                "Atraída pela gravidade de um planeta selvagem e brilhante,\na nave do Chico agora corta as estrelas em chamas\nrumo a um pouso forçado na selva..."
             };
 
-            float[] alturasY = new float[] { 310f, 165f, 10f, -145f, -300f };
+            float[] alturasY = new float[] { -380f, -475f, -640f, -855f, -1070f };
+            int[] tamanhosFonte = new int[] { 38, 48, 36, 36, 36 };
             for (int i = 0; i < textosHistoria.Length; i++)
             {
-                AdicionarParagrafoCrawl(fonteTitulo, textosHistoria[i], new Vector2(0f, alturasY[i]), i == 0 ? 40 : 34);
+                AdicionarParagrafoCrawl(fonteTitulo, textosHistoria[i], new Vector2(0f, alturasY[i]), tamanhosFonte[i]);
             }
 
             // 6. Feixe luminoso que corta a tela junto com a nave
@@ -309,25 +358,30 @@ namespace SpaceChico
             RectTransform rt = go.AddComponent<RectTransform>();
             rt.anchorMin = new Vector2(0.5f, 0.5f);
             rt.anchorMax = new Vector2(0.5f, 0.5f);
-            rt.sizeDelta = new Vector2(1150f, 130f);
+            rt.sizeDelta = new Vector2(1280f, 180f);
             rt.anchoredPosition = pos;
 
             Text txt = go.AddComponent<Text>();
             txt.font = fonte;
             txt.fontSize = tamanhoFonte;
-            txt.lineSpacing = 1.25f;
+            txt.lineSpacing = 1.28f;
             txt.alignment = TextAnchor.MiddleCenter;
-            txt.color = new Color(1f, 0.86f, 0.22f, 1f);
+            txt.color = new Color(1f, 0.85f, 0.16f, 1f);
             txt.text = texto;
 
             Shadow sh = go.AddComponent<Shadow>();
             sh.effectColor = new Color(0f, 0f, 0f, 0.95f);
             sh.effectDistance = new Vector2(3f, -3f);
 
+            var persp = go.AddComponent<PerspectivaStarWarsEffect>();
+            persp.yCentroParagrafo = pos.y;
+            persp.ativo = true;
+
             paragrafos.Add(new ParagrafoCrawl
             {
                 rt = rt,
                 txt = txt,
+                efeitoPerspectiva = persp,
                 posBase = pos,
                 foiAtropelado = false
             });
@@ -446,33 +500,46 @@ namespace SpaceChico
             Vector3 posFinalShip = propShip != null ? propShip.transform.position : new Vector3(-5.2f, 2.15f, 0f);
 
             // =========================================================================
-            // ATO 1: Logo "SPACE CHICO" Gigante Encolhendo + Texto Star Wars Subindo
+            // ATO 1: Logo "SPACE CHICO" Gigante Encolhendo + Texto Star Wars Subindo Lento e Inclinado
             // =========================================================================
             AudioManager.Play(Sfx.PowerUp, 0.85f);
 
-            float duracaoCrawl = 5.0f;
+            float duracaoCrawl = 11.2f;
+            float velCrawl = 88f; // Velocidade lenta e majestosa estilo Star Wars
+            float scrollOffset = 0f;
             float t = 0f;
             while (t < duracaoCrawl && !pulouCutscene)
             {
                 float dt = Time.unscaledDeltaTime;
                 t += dt;
-                float p = t / duracaoCrawl;
 
-                AnimarEstrelas(t, -10f, -8f);
-                planetaRt.localRotation = Quaternion.Euler(0f, 0f, t * 2.5f);
+                AnimarEstrelas(t, -8f, -6f);
+                planetaRt.localRotation = Quaternion.Euler(0f, 0f, t * 2.2f);
 
-                // Logo gigante encolhe em direção ao fundo do espaço (igual Star Wars!)
-                float pLogo = Mathf.Clamp01(t / 2.6f);
-                float escLogo = Mathf.Lerp(2.3f, 0.18f, pLogo);
+                // Logo gigante encolhe em direção ao fundo do espaço nos primeiros 3.2 segundos
+                float pLogo = Mathf.Clamp01(t / 3.2f);
+                float escLogo = Mathf.Lerp(2.35f, 0.14f, pLogo);
                 logoRt.localScale = new Vector3(escLogo, escLogo, 1f);
-                logoRt.anchoredPosition = new Vector2(0f, Mathf.Lerp(-20f, 440f, pLogo));
+                logoRt.anchoredPosition = new Vector2(0f, Mathf.Lerp(-10f, 445f, pLogo));
                 logoText.color = new Color(1f, 0.88f, 0.2f, Mathf.Clamp01(1f - (pLogo - 0.65f) / 0.35f));
 
-                // Parágrafos da história sobem em perspectiva 3D
-                float crawlY = Mathf.Lerp(-540f, 75f, p);
-                float escCrawl = Mathf.Lerp(1.06f, 0.84f, p);
-                crawlRootRt.anchoredPosition = new Vector2(0f, crawlY);
-                crawlRootRt.localScale = new Vector3(escCrawl, escCrawl, 1f);
+                // Parágrafos sobem lentamente ao longo do plano inclinado 3D (começando logo após o logo afastar)
+                if (t > 0.8f)
+                {
+                    scrollOffset += dt * velCrawl;
+                }
+
+                for (int i = 0; i < paragrafos.Count; i++)
+                {
+                    var par = paragrafos[i];
+                    float yPlano = par.posBase.y + scrollOffset;
+                    par.rt.anchoredPosition = new Vector2(0f, yPlano);
+                    if (par.efeitoPerspectiva != null)
+                    {
+                        par.efeitoPerspectiva.yCentroParagrafo = yPlano;
+                        par.txt.SetVerticesDirty();
+                    }
+                }
 
                 yield return null;
             }
@@ -490,7 +557,7 @@ namespace SpaceChico
                 AudioManager.Play(Sfx.Shoot, 1.0f);
 
                 t = 0f;
-                float duracaoCorte = 1.65f;
+                float duracaoCorte = 1.75f;
                 float timerFumaca = 0f;
 
                 // A nave vem grande de trás da câmera (direita/topo) para o meio/esquerda do espaço!
@@ -502,6 +569,7 @@ namespace SpaceChico
                     float dt = Time.unscaledDeltaTime;
                     t += dt;
                     float p = Mathf.Clamp01(t / duracaoCorte);
+                    scrollOffset += dt * (velCrawl * 0.5f);
 
                     AnimarEstrelas(t + 5f, -55f, -25f);
 
@@ -532,10 +600,22 @@ namespace SpaceChico
                     for (int i = 0; i < paragrafos.Count; i++)
                     {
                         var par = paragrafos[i];
-                        float gatilhoP = 0.20f + i * 0.11f;
+                        float gatilhoP = 0.18f + i * 0.11f;
                         if (!par.foiAtropelado && p >= gatilhoP)
                         {
                             par.foiAtropelado = true;
+                            float yPlano = par.posBase.y + scrollOffset;
+                            float escAtual = PerspectivaStarWarsEffect.CalcularEscalaPerspectiva(yPlano);
+                            float screenYAtual = PerspectivaStarWarsEffect.CalcularScreenY(yPlano);
+
+                            if (par.efeitoPerspectiva != null)
+                            {
+                                par.efeitoPerspectiva.ativo = false;
+                                par.txt.SetVerticesDirty();
+                            }
+                            par.rt.anchoredPosition = new Vector2(0f, screenYAtual);
+                            par.rt.localScale = new Vector3(escAtual, escAtual * 0.75f, 1f);
+
                             float dirY = (i % 2 == 0) ? 1f : -1f;
                             float dirX = (i < 2) ? -1f : 1f;
                             par.velocidadeVoando = new Vector2(dirX * Random.Range(420f, 680f), dirY * Random.Range(320f, 540f));
@@ -549,7 +629,17 @@ namespace SpaceChico
                             }
                         }
 
-                        if (par.foiAtropelado)
+                        if (!par.foiAtropelado)
+                        {
+                            float yPlano = par.posBase.y + scrollOffset;
+                            par.rt.anchoredPosition = new Vector2(0f, yPlano);
+                            if (par.efeitoPerspectiva != null)
+                            {
+                                par.efeitoPerspectiva.yCentroParagrafo = yPlano;
+                                par.txt.SetVerticesDirty();
+                            }
+                        }
+                        else
                         {
                             par.rt.anchoredPosition += par.velocidadeVoando * dt;
                             par.anguloAtual += par.velocidadeGiro * dt;
