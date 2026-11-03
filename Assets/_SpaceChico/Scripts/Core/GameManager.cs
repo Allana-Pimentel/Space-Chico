@@ -57,6 +57,14 @@ namespace SpaceChico
             Instance = this;
             Time.timeScale = 1f;
             Layers.ApplyCollisionMatrix();
+            LevelExpander.ExpandIfPantano();
+
+            var propShip = GameObject.Find("Prop_CrashedShip");
+            if (propShip != null)
+            {
+                propShip.transform.localScale = new Vector3(2.35f, 2.35f, 1f);
+                propShip.transform.position = new Vector3(-5.2f, 2.15f, 0f);
+            }
         }
 
         void Start()

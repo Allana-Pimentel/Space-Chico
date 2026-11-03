@@ -57,6 +57,19 @@ namespace SpaceChico
             targetPoint = pointB;
         }
 
+        public void SetPatrolRange(float minX, float maxX)
+        {
+            var goA = new GameObject(name + "_WaypointA");
+            goA.transform.position = new Vector3(minX, transform.position.y, 0f);
+            pointA = goA.transform;
+
+            var goB = new GameObject(name + "_WaypointB");
+            goB.transform.position = new Vector3(maxX, transform.position.y, 0f);
+            pointB = goB.transform;
+
+            targetPoint = pointB;
+        }
+
         void Start()
         {
             if (playerLayer.value == 0)

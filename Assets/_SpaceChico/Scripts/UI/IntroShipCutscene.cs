@@ -438,7 +438,12 @@ namespace SpaceChico
             Vector3 posInicialPlayer = player != null ? player.transform.position : new Vector3(-1.5f, -0.95f, 0f);
 
             GameObject propShip = GameObject.Find("Prop_CrashedShip");
-            Vector3 posFinalShip = propShip != null ? propShip.transform.position : (posInicialPlayer + new Vector3(-2.5f, 0f, 0f));
+            if (propShip != null)
+            {
+                propShip.transform.localScale = new Vector3(2.35f, 2.35f, 1f);
+                propShip.transform.position = new Vector3(-5.2f, 2.15f, 0f);
+            }
+            Vector3 posFinalShip = propShip != null ? propShip.transform.position : new Vector3(-5.2f, 2.15f, 0f);
 
             // =========================================================================
             // ATO 1: Logo "SPACE CHICO" Gigante Encolhendo + Texto Star Wars Subindo
@@ -673,13 +678,13 @@ namespace SpaceChico
                         texNaveSprite,
                         new Rect(0, 0, texNaveSprite.width, texNaveSprite.height),
                         new Vector2(0.5f, 0.5f),
-                        220f
+                        115f
                     );
                 }
                 srNaveMundo.sortingOrder = 28;
                 naveMundoObj.transform.localScale = new Vector3(-1f, 1f, 1f);
 
-                Vector3 posAltoShip = posFinalShip + new Vector3(-6.0f, 7.8f, 0f);
+                Vector3 posAltoShip = posFinalShip + new Vector3(-6.5f, 8.2f, 0f);
                 naveMundoObj.transform.position = posAltoShip;
                 player.transform.position = posAltoShip;
 
@@ -702,7 +707,7 @@ namespace SpaceChico
 
                     if (Random.value < 0.75f)
                     {
-                        VFX.Burst(posAtualNave + new Vector3(-0.9f, 0.7f, 0f), new Color(1f, 0.6f, 0.15f), 4, 3.2f, 0.24f, 0.38f);
+                        VFX.Burst(posAtualNave + new Vector3(-1.8f, 1.1f, 0f), new Color(1f, 0.6f, 0.15f), 5, 3.8f, 0.30f, 0.45f);
                     }
 
                     yield return null;
@@ -711,6 +716,7 @@ namespace SpaceChico
                 Destroy(naveMundoObj);
                 if (propShip != null)
                 {
+                    propShip.transform.localScale = new Vector3(2.35f, 2.35f, 1f);
                     propShip.transform.position = posFinalShip;
                     propShip.SetActive(true);
                 }
@@ -733,7 +739,7 @@ namespace SpaceChico
                         if (player.spriteFall != null) player.spriteRenderer.sprite = player.spriteFall;
                     }
 
-                    Vector3 origemEjecao = posFinalShip + new Vector3(0.2f, 0.9f, 0f);
+                    Vector3 origemEjecao = posFinalShip + new Vector3(0.4f, 0.65f, 0f);
                     VFX.PopText(origemEjecao + Vector3.up * 0.8f, "MIAU!", new Color(1f, 0.9f, 0.3f), 0.9f);
 
                     float ejecaoT = 0f;
@@ -770,6 +776,7 @@ namespace SpaceChico
             // Garante que tudo esteja na posição final correta (inclusive se o jogador pulou a abertura)
             if (propShip != null)
             {
+                propShip.transform.localScale = new Vector3(2.35f, 2.35f, 1f);
                 propShip.transform.position = posFinalShip;
                 propShip.SetActive(true);
             }
