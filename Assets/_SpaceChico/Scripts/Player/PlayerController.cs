@@ -5,7 +5,7 @@ namespace SpaceChico
 {
     public enum PlayerState
     {
-        Idle, Run, Jump, Fall, Hurt, Dead, Climbing, Crouch, Celebrate
+        Idle, Run, Jump, Fall, Hurt, Dead, Climbing, Celebrate
     }
 
     // Controlador do Chico estilo Super Mario (correr, pular na cabeça dos inimigos e subir cipó)
@@ -13,15 +13,11 @@ namespace SpaceChico
     {
         [Header("Movimentação")]
         public float moveSpeed = 7.5f;
-        public float acceleration = 45f;
-        public float deceleration = 55f;
 
         [Header("Pulo")]
         public float jumpForce = 13.8f;
         public float jumpCutMultiplier = 0.5f;
         public float fallGravityMultiplier = 2.2f;
-        public float coyoteTime = 0.12f;
-        public float jumpBufferTime = 0.15f;
 
         [Header("Chão e Cipó")]
         public Transform groundCheck;
@@ -46,18 +42,13 @@ namespace SpaceChico
         public float Facing { get; private set; } = 1f;
         public bool IsGrounded { get; private set; }
         public Vector2 CurrentVelocity => rb != null ? rb.linearVelocity : Vector2.zero;
-
         public PlayerStats Stats { get; private set; }
-        public Inventory Inventory { get; private set; }
-        public PlayerShooter Shooter { get; private set; }
-        public PlayerPowers Powers { get; private set; }
 
         private Rigidbody2D rb;
         private Collider2D mainCollider;
         private float initialGravity;
         private float initialScaleX;
         private float initialScaleY;
-        private bool canDoubleJump;
         private float runTimer;
         private bool runFrame;
         private float hurtTimer;
@@ -69,11 +60,8 @@ namespace SpaceChico
             rb = GetComponent<Rigidbody2D>();
             mainCollider = GetComponent<Collider2D>();
             Stats = GetComponent<PlayerStats>();
-            Inventory = GetComponent<Inventory>();
-            Shooter = GetComponent<PlayerShooter>();
-            Powers = GetComponent<PlayerPowers>();
-
             if (spriteRenderer == null) spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+
             initialGravity = rb.gravityScale > 0 ? rb.gravityScale : 3.2f;
             initialScaleX = Mathf.Abs(transform.localScale.x);
             initialScaleY = transform.localScale.y;
@@ -137,7 +125,6 @@ namespace SpaceChico
                 if (hit != null && hit != ignoredPlatform && rb.linearVelocity.y <= 0.5f && transform.position.y >= hit.bounds.max.y - 0.22f)
                 {
                     IsGrounded = true;
-                    canDoubleJump = true;
                     break;
                 }
             }
@@ -145,18 +132,8 @@ namespace SpaceChico
 
         void HandleJumpAndClimb()
         {
-            if (State != PlayerState.Climbing && GameInput.Pressed(GameAction.Jump))
-            {
-                if (IsGrounded)
-                {
-                    Jump();
-                }
-                else if (canDoubleJump && Powers != null && Powers.IsDoubleJumpActive)
-                {
-                    canDoubleJump = false;
-                    Jump();
-                }
-            }
+            if (State != PlayerState.Climbing && IsGrounded && GameInput.Pressed(GameAction.Jump))
+                Jump();
 
             if (GameInput.Released(GameAction.Jump) && rb.linearVelocity.y > 0f)
                 rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y * jumpCutMultiplier);
@@ -182,7 +159,6 @@ namespace SpaceChico
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, force);
             State = PlayerState.Jump;
-            canDoubleJump = true;
         }
 
         void FixedUpdateMovement()
@@ -200,11 +176,7 @@ namespace SpaceChico
 
         void FixedUpdateClimbing()
         {
-            if (activeVine == null)
-            {
-                ExitClimbing();
-                return;
-            }
+            if (activeVine == null) { ExitClimbing(); return; }
 
             rb.gravityScale = 0f;
             SetPlatformIgnore(activeVine.platformCollider, true);
@@ -299,7 +271,6 @@ namespace SpaceChico
         public void TakeDamage(int damage, Vector2 hitDirection, GameObject damageSource)
         {
             if (State == PlayerState.Dead || Stats.IsInvulnerable) return;
-            if (Powers != null && Powers.IsShieldActive) return;
 
             Stats.TakeDamage(damage);
             if (Stats.CurrentLife <= 0) return;
@@ -329,9 +300,6 @@ namespace SpaceChico
             if (spriteRenderer != null) spriteRenderer.color = Color.white;
         }
 
-        public void NotifyShot() { }
-        public void EnableDoubleJump() => canDoubleJump = true;
-        public void ChangeState(PlayerState s) => State = s;
         public void TriggerCelebrate() { State = PlayerState.Celebrate; rb.linearVelocity = Vector2.zero; }
 
         public void TriggerDeath(string reason)

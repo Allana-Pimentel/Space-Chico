@@ -10,7 +10,6 @@ namespace SpaceChico
         Playing,
         Cutscene,
         Paused,
-        Backpack,
         LevelComplete,
         GameOver
     }
@@ -28,7 +27,6 @@ namespace SpaceChico
         [Header("Referências")]
         public PlayerController player;
         public HUD hud;
-        public BackpackUI backpackUI;
         public PauseMenuUI pauseMenuUI;
         public GameOverUI gameOverUI;
         public LevelCompleteUI levelCompleteUI;
@@ -81,9 +79,7 @@ namespace SpaceChico
         void Update()
         {
             if (State != GameState.Playing) return;
-
             LevelTime += Time.deltaTime;
-
             if (GameInput.Pressed(GameAction.Pause)) Pause();
         }
 
@@ -92,29 +88,6 @@ namespace SpaceChico
             State = s;
             Time.timeScale = (s == GameState.Playing || s == GameState.Cutscene) ? 1f : 0f;
             StateChanged?.Invoke(s);
-        }
-
-        public static void Hitstop(float duration = 0.05f)
-        {
-            if (Instance == null || Instance.State != GameState.Playing) return;
-            Instance.StartCoroutine(Instance.HitstopRoutine(duration));
-        }
-
-        private IEnumerator HitstopRoutine(float duration)
-        {
-            Time.timeScale = 0.05f;
-            yield return new WaitForSecondsRealtime(duration);
-            if (State == GameState.Playing) Time.timeScale = 1f;
-        }
-
-        public void OpenBackpack(ItemData highlight, Action onClosed)
-        {
-            onClosed?.Invoke();
-        }
-
-        public void CloseBackpack()
-        {
-            SetState(GameState.Playing);
         }
 
         public void Pause()

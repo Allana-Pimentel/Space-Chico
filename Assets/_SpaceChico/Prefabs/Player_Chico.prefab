@@ -136,9 +136,6 @@ GameObject:
   - component: {fileID: 2608301834752369696}
   - component: {fileID: 1760615201265482197}
   - component: {fileID: 4175869574894244730}
-  - component: {fileID: 26590398854622300}
-  - component: {fileID: 767717991370136671}
-  - component: {fileID: 6978346359899150785}
   - component: {fileID: 3215673442523289050}
   m_Layer: 9
   m_Name: Player_Chico
@@ -312,50 +309,6 @@ MonoBehaviour:
   crystals: 0
   invulnerabilityDuration: 1.5
   isInvulnerable: 0
---- !u!114 &26590398854622300
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4664640445867439910}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 78b5076c1735d1948b60e746578f8fdf, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SpaceChico.Inventory
-  capacity: 8
-  slots: []
-  equippedPower: {fileID: 0}
---- !u!114 &767717991370136671
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4664640445867439910}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5e2b5cf6266e877469ecb3fcbdd6b523, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SpaceChico.PlayerShooter
-  projectilePrefab: {fileID: 4862010662163245360, guid: a18f9ffeb16a77e48b3dde871bbfc513, type: 3}
-  firePoint: {fileID: 1808218806993565847}
-  fireRate: 0.28
-  muzzleColor: {r: 0.2, g: 0.9, b: 1, a: 1}
---- !u!114 &6978346359899150785
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4664640445867439910}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3e6fd63b9605e1448b21d85bdf5eb619, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SpaceChico.PlayerPowers
-  shieldBubbleVisual: {fileID: 1998081195052418399}
 --- !u!114 &3215673442523289050
 MonoBehaviour:
   m_ObjectHideFlags: 0

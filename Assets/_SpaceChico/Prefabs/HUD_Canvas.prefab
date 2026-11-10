@@ -1127,8 +1127,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "Setas: Mover / Escalar Vinhas\nEspa\xE7o: Pular / Esmagar\n[E] Atirar 
-    |  [F] Poder  |  [B] Mochila"
+  m_Text: "Setas / WASD: Mover e Subir Vinhas\nEspa\xE7o: Pular e Pisar nos Inimigos"
 --- !u!1 &1918526300576757016
 GameObject:
   m_ObjectHideFlags: 0
@@ -2554,7 +2553,6 @@ GameObject:
   - component: {fileID: 6674638970880608232}
   - component: {fileID: 4665691018588359457}
   - component: {fileID: 2802292972857115567}
-  - component: {fileID: 3266034794324829791}
   m_Layer: 0
   m_Name: BackpackPanel
   m_TagString: Untagged
@@ -2623,27 +2621,6 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &3266034794324829791
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4969578001254669207}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: afc01a3db30de8041ac54e211af830df, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SpaceChico.BackpackUI
-  panelRoot: {fileID: 4969578001254669207}
-  slotsContainer: {fileID: 6333845721227259321}
-  slotPrefab: {fileID: 0}
-  detailIcon: {fileID: 8318272850487186592}
-  detailName: {fileID: 4825155018102596153}
-  detailCategory: {fileID: 6461943575880740500}
-  detailDescription: {fileID: 5948309922518421444}
-  detailQuantity: {fileID: 0}
-  closeButton: {fileID: 2284135624817577092}
 --- !u!1 &5564361603632311049
 GameObject:
   m_ObjectHideFlags: 0

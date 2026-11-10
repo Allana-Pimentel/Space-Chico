@@ -11,11 +11,6 @@ namespace SpaceChico
         public int currentLife;
         public int maxLife;
 
-        [Header("Oxigênio (Desativado no modo Arcade)")]
-        public float maxOxygen = 100f;
-        public float currentOxygen = 100f;
-        public float oxygenDrainRate = 0f;
-
         [Header("Pontuação / Cristais")]
         public int crystals;
 
@@ -28,12 +23,10 @@ namespace SpaceChico
 
         public int CurrentLife => currentLife;
         public int MaxLife => maxLife;
-        public float CurrentOxygen => currentOxygen;
         public int Crystals => crystals;
         public bool IsInvulnerable => isInvulnerable;
 
         public event Action<int, int> LifeChanged;
-        public event Action<float, float> OxygenChanged;
         public event Action<int> CrystalsChanged;
         public event Action<bool> InvulnerabilityChanged;
 
@@ -41,7 +34,6 @@ namespace SpaceChico
         {
             maxLife = baseMaxLife + ProgressData.BonusMaxLife;
             currentLife = maxLife;
-            currentOxygen = maxOxygen;
             crystals = ProgressData.TotalCrystals;
         }
 
@@ -80,13 +72,8 @@ namespace SpaceChico
                 return;
             }
 
-            TriggerInvulnerability(invulnerabilityDuration);
-        }
-
-        public void TriggerInvulnerability(float duration)
-        {
             isInvulnerable = true;
-            invulnerableTimer = duration;
+            invulnerableTimer = invulnerabilityDuration;
             InvulnerabilityChanged?.Invoke(true);
         }
 
@@ -102,15 +89,6 @@ namespace SpaceChico
             maxLife += amount;
             currentLife = Mathf.Min(maxLife, currentLife + amount);
             LifeChanged?.Invoke(currentLife, maxLife);
-        }
-
-        public void RestoreOxygen(float amount)
-        {
-            if (isDead) return;
-            OxygenChanged?.Invoke(currentOxygen, maxOxygen);
-            // No modo Arcade sem barra de oxigênio, cápsulas recuperam 1 de vida ou dão +5 cristais
-            if (currentLife < maxLife) Heal(1);
-            else AddCrystals(5);
         }
 
         public void AddCrystals(int amount)
