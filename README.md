@@ -57,7 +57,7 @@ Assets/_SpaceChico/Scripts/
 
 1. Clone o repositório:
    ```bash
-   git clone https://github.com/SEU_USUARIO/SpaceChico.git
+   git clone https://github.com/Allana-Pimentel/Space-Chico
    ```
 2. Abra o **Unity Hub** e adicione o projeto selecionando a pasta `SpaceChico`.
 3. Certifique-se de usar o **Unity 6 (6000.5.6f1)** ou superior.
