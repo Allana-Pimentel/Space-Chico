@@ -144,6 +144,8 @@ namespace SpaceChico
             }
 
             t = 0f;
+            if (crawlRt != null) crawlRt.gameObject.SetActive(false);
+            if (logoRt != null) logoRt.gameObject.SetActive(false);
             AudioManager.Play(Sfx.Alert, 0.85f);
             while (t < 2.2f && !pulou)
             {

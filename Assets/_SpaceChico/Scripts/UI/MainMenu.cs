@@ -11,8 +11,8 @@ namespace SpaceChico
         public string cenaDoJogo = "01_Pantano";
 
         private Font fonte;
-        private GameObject painelPrincipal, painelControles, painelCreditos;
-        private Button botaoJogar, botaoVoltarControles, botaoVoltarCreditos;
+        private GameObject painelPrincipal, painelCreditos;
+        private Button botaoJogar, botaoVoltarCreditos;
         private Text tituloTexto;
 
         private readonly Color amarelo = new Color(1f, 0.88f, 0.2f);
@@ -33,25 +33,11 @@ namespace SpaceChico
             CriarPainel("Escurecer", new Color(0f, 0f, 0f, 0.45f));
 
             painelPrincipal = CriarPainel("PainelPrincipal", Color.clear);
-            tituloTexto = CriarTexto(painelPrincipal.transform, "SPACE CHICO", 120, amarelo, new Vector2(0, 270));
-            CriarTexto(painelPrincipal.transform, "O Pantano Bioluminescente", 38, Color.white, new Vector2(0, 175));
-            botaoJogar = CriarBotao(painelPrincipal.transform, "JOGAR", new Vector2(0, 30), Jogar);
-            CriarBotao(painelPrincipal.transform, "CONTROLES", new Vector2(0, -65), MostrarControles);
-            CriarBotao(painelPrincipal.transform, "CREDITOS", new Vector2(0, -160), MostrarCreditos);
-            CriarBotao(painelPrincipal.transform, "SAIR", new Vector2(0, -255), Sair);
-            CriarTexto(painelPrincipal.transform, "Setas: escolher   |   Enter: confirmar", 24, new Color(1f, 1f, 1f, 0.7f), new Vector2(0, -420));
-
-            painelControles = CriarPainel("PainelControles", Color.clear);
-            CriarTexto(painelControles.transform, "CONTROLES", 80, amarelo, new Vector2(0, 300));
-            CriarTexto(painelControles.transform,
-                "Setas ou A / D: andar\n" +
-                "Espaco: pular (pulo duplo liberado!)\n" +
-                "W / S perto do cipo: subir e descer\n" +
-                "Pise na cabeca dos inimigos para vence-los\n" +
-                "Colete 10 cristais para ganhar +1 coracao\n" +
-                "Esc: pausar o jogo",
-                34, Color.white, new Vector2(0, 40));
-            botaoVoltarControles = CriarBotao(painelControles.transform, "VOLTAR", new Vector2(0, -260), MostrarMenu);
+            tituloTexto = CriarTexto(painelPrincipal.transform, "SPACE CHICO", 120, amarelo, new Vector2(0, 260));
+            CriarTexto(painelPrincipal.transform, "O Pantano Bioluminescente", 40, Color.white, new Vector2(0, 160));
+            botaoJogar = CriarBotao(painelPrincipal.transform, "JOGAR", new Vector2(0, 0), Jogar);
+            CriarBotao(painelPrincipal.transform, "CREDITOS", new Vector2(0, -110), MostrarCreditos);
+            CriarTexto(painelPrincipal.transform, "Setas: escolher   |   Enter: confirmar", 24, new Color(1f, 1f, 1f, 0.7f), new Vector2(0, -380));
 
             painelCreditos = CriarPainel("PainelCreditos", Color.clear);
             CriarTexto(painelCreditos.transform, "CREDITOS", 80, amarelo, new Vector2(0, 300));
@@ -59,9 +45,11 @@ namespace SpaceChico
                 "SPACE CHICO: O Pantano Bioluminescente\n\n" +
                 "Projeto Academico de Computacao / Jogos Digitais\n" +
                 "Motor: Unity 6 (2D Retro Platformer)\n" +
-                "Mecanicas: Pulo Duplo, Escalada, Stomp & Boss Fight\n" +
-                "Audio e Efeitos Sonoros Retro Integrados",
-                32, Color.white, new Vector2(0, 40));
+                "Mecanicas: Pulo Duplo, Escalada, Stomp & Boss Fight\n\n" +
+                "Controles: Setas / WASD (Mover e Subir Vinhas)\n" +
+                "Espaco: Pular e Pisar na cabeca dos inimigos\n" +
+                "Esc: Pausar o jogo",
+                32, Color.white, new Vector2(0, 50));
             botaoVoltarCreditos = CriarBotao(painelCreditos.transform, "VOLTAR", new Vector2(0, -260), MostrarMenu);
 
             MostrarMenu();
@@ -75,12 +63,12 @@ namespace SpaceChico
                 tituloTexto.transform.localScale = new Vector3(s, s, 1f);
             }
 
-            if ((painelControles.activeSelf || painelCreditos.activeSelf) && Input.GetKeyDown(KeyCode.Escape))
+            if (painelCreditos.activeSelf && Input.GetKeyDown(KeyCode.Escape))
                 MostrarMenu();
 
             if (EventSystem.current != null && EventSystem.current.currentSelectedGameObject == null)
             {
-                Button padrao = painelControles.activeSelf ? botaoVoltarControles : (painelCreditos.activeSelf ? botaoVoltarCreditos : botaoJogar);
+                Button padrao = painelCreditos.activeSelf ? botaoVoltarCreditos : botaoJogar;
                 EventSystem.current.SetSelectedGameObject(padrao.gameObject);
             }
         }
@@ -93,27 +81,16 @@ namespace SpaceChico
             SceneManager.LoadScene(cenaDoJogo);
         }
 
-        void MostrarControles()
-        {
-            AudioManager.Play(Sfx.UiSelect);
-            painelPrincipal.SetActive(false);
-            painelCreditos.SetActive(false);
-            painelControles.SetActive(true);
-            EventSystem.current.SetSelectedGameObject(botaoVoltarControles.gameObject);
-        }
-
         void MostrarCreditos()
         {
             AudioManager.Play(Sfx.UiSelect);
             painelPrincipal.SetActive(false);
-            painelControles.SetActive(false);
             painelCreditos.SetActive(true);
             EventSystem.current.SetSelectedGameObject(botaoVoltarCreditos.gameObject);
         }
 
         void MostrarMenu()
         {
-            painelControles.SetActive(false);
             painelCreditos.SetActive(false);
             painelPrincipal.SetActive(true);
             if (EventSystem.current != null)
