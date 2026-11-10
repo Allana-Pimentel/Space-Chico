@@ -32,7 +32,7 @@ namespace SpaceChico
         private Collider2D mainCollider;
         private float initialGravity, initialScaleX, initialScaleY, runTimer, hurtTimer;
         private bool runFrame;
-        private bool canDoubleJump;
+        private int jumpsRemaining = 2;
         private Vine activeVine;
         private Collider2D ignoredPlatform;
 
@@ -73,15 +73,18 @@ namespace SpaceChico
 
             if (State != PlayerState.Climbing && GameInput.Pressed(GameAction.Jump))
             {
-                if (IsGrounded)
+                if (jumpsRemaining > 0)
                 {
-                    Jump();
-                }
-                else if (canDoubleJump)
-                {
-                    canDoubleJump = false;
-                    Jump();
-                    VFX.Burst(transform.position, new Color(0.3f, 1f, 0.85f), 12, 3.5f, 0.2f, 0.3f);
+                    bool isAirJump = (jumpsRemaining < 2) || !IsGrounded;
+                    jumpsRemaining--;
+                    rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
+                    State = PlayerState.Jump;
+                    AudioManager.Play(Sfx.Jump);
+                    if (isAirJump)
+                    {
+                        VFX.Burst(transform.position + Vector3.down * 0.35f, new Color(0.2f, 0.95f, 1f), 16, 4.5f, 0.25f, 0.35f);
+                        AudioManager.Play(Sfx.PowerUp, 0.8f);
+                    }
                 }
             }
             if (GameInput.Released(GameAction.Jump) && rb.linearVelocity.y > 0f)
@@ -124,7 +127,7 @@ namespace SpaceChico
                 if (hit != null && hit != ignoredPlatform && rb.linearVelocity.y <= 0.5f && transform.position.y >= hit.bounds.max.y - 0.22f)
                 {
                     IsGrounded = true;
-                    canDoubleJump = true;
+                    jumpsRemaining = 2;
                     break;
                 }
             }
@@ -141,7 +144,7 @@ namespace SpaceChico
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, force);
             State = PlayerState.Jump;
-            canDoubleJump = true;
+            jumpsRemaining = 2;
         }
 
         void FixedUpdateMovement()
@@ -180,7 +183,7 @@ namespace SpaceChico
             if (spriteRenderer != null) spriteRenderer.flipX = false;
             rb.gravityScale = initialGravity;
             rb.linearVelocity = Vector2.zero;
-            canDoubleJump = true;
+            jumpsRemaining = 2;
             State = PlayerState.Idle;
         }
 

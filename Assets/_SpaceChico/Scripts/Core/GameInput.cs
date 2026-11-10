@@ -17,7 +17,7 @@ namespace SpaceChico
                 case GameAction.Right: return Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D);
                 case GameAction.Up:    return Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W);
                 case GameAction.Down:  return Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S);
-                case GameAction.Jump:  return Input.GetKey(KeyCode.Space);
+                case GameAction.Jump:  return Input.GetKey(KeyCode.Space) || Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W);
                 default: return false;
             }
         }
@@ -26,13 +26,13 @@ namespace SpaceChico
         {
             switch (a)
             {
-                case GameAction.Jump:    return Input.GetKeyDown(KeyCode.Space);
+                case GameAction.Jump:    return Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W);
                 case GameAction.Pause:   return Input.GetKeyDown(KeyCode.Escape);
                 case GameAction.Confirm: return Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Space);
                 default: return false;
             }
         }
 
-        public static bool Released(GameAction a) => a == GameAction.Jump && Input.GetKeyUp(KeyCode.Space);
+        public static bool Released(GameAction a) => a == GameAction.Jump && (Input.GetKeyUp(KeyCode.Space) || Input.GetKeyUp(KeyCode.UpArrow) || Input.GetKeyUp(KeyCode.W));
     }
 }
