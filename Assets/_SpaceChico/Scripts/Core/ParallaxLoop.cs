@@ -2,104 +2,45 @@ using UnityEngine;
 
 namespace SpaceChico
 {
-    /// <summary>
-    /// Gerenciador de Paralaxe com Loop Infinito (Esteira de Fundo).
-    /// Organiza 3 painéis lado a lado e os reposiciona automaticamente conforme
-    /// a câmera se move, garantindo um fundo contínuo sem emendas e sem fim.
-    /// </summary>
+    // Fundo em paralaxe com repetição contínua de 3 painéis
     public class ParallaxLoop : MonoBehaviour
     {
-        [Header("Configurações da Câmera")]
-        [Tooltip("Câmera principal que o fundo deve acompanhar")]
         public Transform cam;
-
-        [Header("Efeito de Profundidade")]
-        [Tooltip("0 = fundo anda junto com o jogador; 1 = fundo fica estático; 0.7 = efeito de profundidade suave")]
-        [Range(0f, 1f)]
-        public float parallaxFactor = 0.65f;
-
-        [Tooltip("Acompanha suavemente o movimento vertical da câmera")]
-        public float verticalFollowFactor = 0.3f;
-
-        [Header("Painéis de Fundo")]
+        public float parallaxFactor = 0.65f, verticalFollowFactor = 0.3f;
         public SpriteRenderer[] panels;
 
         private float panelWidth;
         private Vector3 lastCamPos;
-        private float initialY;
 
-        private void Start()
+        void Start()
         {
-            if (cam == null && Camera.main != null)
-            {
-                cam = Camera.main.transform;
-            }
+            if (cam == null && Camera.main != null) cam = Camera.main.transform;
+            if (cam != null) lastCamPos = cam.position;
+            if (panels == null || panels.Length == 0) panels = GetComponentsInChildren<SpriteRenderer>();
 
-            if (cam != null)
+            if (panels?.Length >= 3 && panels[0].sprite != null)
             {
-                lastCamPos = cam.position;
-            }
-
-            initialY = transform.position.y;
-
-            // Se os painéis não foram atribuídos manualmente, busca nos filhos
-            if (panels == null || panels.Length == 0)
-            {
-                panels = GetComponentsInChildren<SpriteRenderer>();
-            }
-
-            if (panels != null && panels.Length > 0 && panels[0].sprite != null)
-            {
-                // Calcula a largura real do sprite no mundo (com leve sobreposição de 0.02 para evitar fresta subpixel)
                 panelWidth = panels[0].bounds.size.x - 0.02f;
-
-                // Organiza os 3 painéis perfeitamente alinhados lado a lado no início
-                // Painel 0 (Esquerda), Painel 1 (Centro), Painel 2 (Direita)
-                float startCenterX = cam != null ? cam.position.x : transform.position.x;
-                if (panels.Length >= 3)
-                {
-                    panels[0].transform.position = new Vector3(startCenterX - panelWidth, initialY, transform.position.z);
-                    panels[1].transform.position = new Vector3(startCenterX, initialY, transform.position.z);
-                    panels[2].transform.position = new Vector3(startCenterX + panelWidth, initialY, transform.position.z);
-                }
+                float cx = cam != null ? cam.position.x : transform.position.x;
+                for (int i = 0; i < 3; i++)
+                    panels[i].transform.position = new Vector3(cx + (i - 1) * panelWidth, transform.position.y, transform.position.z);
             }
         }
 
-        private void LateUpdate()
+        void LateUpdate()
         {
-            if (cam == null || panels == null || panels.Length < 3 || panelWidth <= 0f)
-                return;
+            if (cam == null || panels == null || panels.Length < 3 || panelWidth <= 0f) return;
+            Vector3 d = cam.position - lastCamPos;
+            float totalW = panelWidth * panels.Length;
 
-            // 1. Calcula o quanto a câmera se moveu neste frame
-            Vector3 camDelta = cam.position - lastCamPos;
-
-            // 2. Aplica o movimento de paralaxe (o fundo anda uma fração do movimento do jogador)
-            float moveX = camDelta.x * parallaxFactor;
-            float moveY = camDelta.y * verticalFollowFactor;
-
-            foreach (var panel in panels)
+            foreach (var p in panels)
             {
-                panel.transform.position += new Vector3(moveX, moveY, 0f);
-
-                // 3. Efeito Esteira (Loop):
-                // Se a câmera andou para a direita e o painel ficou para trás (saiu da tela pela esquerda)
-                float totalWidth = panelWidth * panels.Length;
-                float distFromCam = cam.position.x - panel.transform.position.x;
-
-                if (distFromCam > panelWidth * 1.5f)
-                {
-                    // Move o painel para a frente da fila
-                    panel.transform.position += new Vector3(totalWidth, 0f, 0f);
-                }
-                else if (distFromCam < -panelWidth * 1.5f)
-                {
-                    // Move o painel para trás da fila (caso o jogador volte)
-                    panel.transform.position -= new Vector3(totalWidth, 0f, 0f);
-                }
+                p.transform.position += new Vector3(d.x * parallaxFactor, d.y * verticalFollowFactor, 0f);
+                float dist = cam.position.x - p.transform.position.x;
+                if (dist > panelWidth * 1.5f) p.transform.position += new Vector3(totalW, 0f, 0f);
+                else if (dist < -panelWidth * 1.5f) p.transform.position -= new Vector3(totalW, 0f, 0f);
             }
-
             lastCamPos = cam.position;
         }
     }
 }
-

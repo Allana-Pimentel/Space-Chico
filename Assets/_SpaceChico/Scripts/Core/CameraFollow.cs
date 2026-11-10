@@ -2,45 +2,30 @@ using UnityEngine;
 
 namespace SpaceChico
 {
-    /// <summary>Câmera que segue o Chico com suavização, "look ahead", limites da fase e tremor (screen shake).</summary>
+    // Câmera 2D que acompanha o Chico dentro dos limites da fase
     public class CameraFollow : MonoBehaviour
     {
         public Transform target;
         public Vector2 offset = new Vector2(0f, 1.6f);
-        public float smoothTimeX = 0.15f;
-        public float smoothTimeY = 0.28f;
-        public float lookAhead = 2.2f;
-        public float lookAheadSmooth = 0.5f;
-
-        [Header("Limites da fase (mundo)")]
+        public float smoothTimeX = 0.15f, smoothTimeY = 0.28f, lookAhead = 2.2f, lookAheadSmooth = 0.5f;
         public float minX = -12f, maxX = 130f, minY = -2f, maxY = 14f;
 
         static CameraFollow instance;
         Camera cam;
-        float velX, velY, currentLook, lookVel;
-        float shakeTime, shakeDuration, shakeAmp;
+        float velX, velY, shakeTime, shakeAmp;
         Vector3 basePos;
 
         void Awake()
         {
             instance = this;
             cam = GetComponent<Camera>();
-            if (Mathf.Abs(transform.position.z) < 0.1f)
-            {
-                transform.position = new Vector3(transform.position.x, transform.position.y, -10f);
-            }
+            if (Mathf.Abs(transform.position.z) < 0.1f) transform.position = new Vector3(transform.position.x, transform.position.y, -10f);
             basePos = transform.position;
         }
 
         public static void Shake(float amplitude, float duration)
         {
-            if (instance == null) return;
-            if (amplitude >= instance.shakeAmp || instance.shakeTime <= 0f)
-            {
-                instance.shakeAmp = amplitude;
-                instance.shakeDuration = duration;
-                instance.shakeTime = duration;
-            }
+            if (instance != null) { instance.shakeAmp = amplitude; instance.shakeTime = duration; }
         }
 
         public void SnapToTarget()
@@ -55,37 +40,20 @@ namespace SpaceChico
         void LateUpdate()
         {
             if (target == null) return;
-
-            float facing = Mathf.Sign(target.lossyScale.x);
-            var pc = target.GetComponent<PlayerController>();
-            if (pc != null) facing = pc.Facing;
-
-            currentLook = Mathf.SmoothDamp(currentLook, facing * lookAhead, ref lookVel, lookAheadSmooth);
-
-            float tx = target.position.x + offset.x + currentLook;
-            float ty = target.position.y + offset.y;
-
-            basePos.x = Mathf.SmoothDamp(basePos.x, tx, ref velX, smoothTimeX);
-            basePos.y = Mathf.SmoothDamp(basePos.y, ty, ref velY, smoothTimeY);
+            basePos.x = Mathf.SmoothDamp(basePos.x, target.position.x + offset.x, ref velX, smoothTimeX);
+            basePos.y = Mathf.SmoothDamp(basePos.y, target.position.y + offset.y, ref velY, smoothTimeY);
             basePos = Clamp(basePos);
 
-            Vector3 shake = Vector3.zero;
-            if (shakeTime > 0f)
-            {
-                shakeTime -= Time.deltaTime;
-                float k = Mathf.Clamp01(shakeTime / shakeDuration);
-                shake = (Vector3)(Random.insideUnitCircle * shakeAmp * k);
-            }
+            Vector3 shake = (shakeTime > 0f && (shakeTime -= Time.deltaTime) > 0f) ? (Vector3)(Random.insideUnitCircle * shakeAmp) : Vector3.zero;
             transform.position = basePos + shake;
         }
 
         Vector3 Clamp(Vector3 p)
         {
-            if (cam == null) cam = GetComponent<Camera>();
-            float halfH = cam != null ? cam.orthographicSize : 6f;
-            float halfW = halfH * (cam != null ? cam.aspect : 16f / 9f);
-            p.x = Mathf.Clamp(p.x, minX + halfW, Mathf.Max(minX + halfW, maxX - halfW));
-            p.y = Mathf.Clamp(p.y, minY + halfH, Mathf.Max(minY + halfH, maxY - halfH));
+            float h = cam != null ? cam.orthographicSize : 6f;
+            float w = h * (cam != null ? cam.aspect : 16f / 9f);
+            p.x = Mathf.Clamp(p.x, minX + w, Mathf.Max(minX + w, maxX - w));
+            p.y = Mathf.Clamp(p.y, minY + h, Mathf.Max(minY + h, maxY - h));
             return p;
         }
     }

@@ -6,15 +6,7 @@ namespace SpaceChico
     // Controla os pontos de vida (corações), cristais e invulnerabilidade do Chico
     public class PlayerStats : MonoBehaviour
     {
-        [Header("Vida")]
-        public int baseMaxLife = 3;
-        public int currentLife;
-        public int maxLife;
-
-        [Header("Pontuação / Cristais")]
-        public int crystals;
-
-        [Header("Invulnerabilidade")]
+        public int baseMaxLife = 3, currentLife, maxLife, crystals;
         public float invulnerabilityDuration = 1.5f;
         public bool isInvulnerable;
 
@@ -30,82 +22,52 @@ namespace SpaceChico
         public event Action<int> CrystalsChanged;
         public event Action<bool> InvulnerabilityChanged;
 
-        private void Awake()
+        void Awake()
         {
             maxLife = baseMaxLife + ProgressData.BonusMaxLife;
             currentLife = maxLife;
             crystals = ProgressData.TotalCrystals;
         }
 
-        private void Start()
+        void Start()
         {
             LifeChanged?.Invoke(currentLife, maxLife);
             CrystalsChanged?.Invoke(crystals);
         }
 
-        private void Update()
+        void Update()
         {
-            if (isDead) return;
-            if (GameManager.Instance != null && !GameManager.Instance.IsGameplayRunning) return;
-
-            if (isInvulnerable)
+            if (isDead || (GameManager.Instance != null && !GameManager.Instance.IsGameplayRunning)) return;
+            if (isInvulnerable && (invulnerableTimer -= Time.deltaTime) <= 0f)
             {
-                invulnerableTimer -= Time.deltaTime;
-                if (invulnerableTimer <= 0f)
-                {
-                    isInvulnerable = false;
-                    InvulnerabilityChanged?.Invoke(false);
-                }
+                isInvulnerable = false;
+                InvulnerabilityChanged?.Invoke(false);
             }
         }
 
         public void TakeDamage(int damage)
         {
             if (isDead || isInvulnerable) return;
-
             currentLife = Mathf.Max(0, currentLife - damage);
             LifeChanged?.Invoke(currentLife, maxLife);
-
-            if (currentLife <= 0)
-            {
-                Die("Chico ficou sem vida!");
-                return;
-            }
+            if (currentLife <= 0) { Die("Chico ficou sem vida!"); return; }
 
             isInvulnerable = true;
             invulnerableTimer = invulnerabilityDuration;
             InvulnerabilityChanged?.Invoke(true);
         }
 
-        public void Heal(int amount)
-        {
-            if (isDead) return;
-            currentLife = Mathf.Min(maxLife, currentLife + amount);
-            LifeChanged?.Invoke(currentLife, maxLife);
-        }
+        public void Heal(int amount) { if (!isDead) { currentLife = Mathf.Min(maxLife, currentLife + amount); LifeChanged?.Invoke(currentLife, maxLife); } }
+        public void IncreaseMaxLife(int amount) { maxLife += amount; currentLife = Mathf.Min(maxLife, currentLife + amount); LifeChanged?.Invoke(currentLife, maxLife); }
+        public void AddCrystals(int amount) { crystals += amount; ProgressData.TotalCrystals = crystals; CrystalsChanged?.Invoke(crystals); }
 
-        public void IncreaseMaxLife(int amount)
-        {
-            maxLife += amount;
-            currentLife = Mathf.Min(maxLife, currentLife + amount);
-            LifeChanged?.Invoke(currentLife, maxLife);
-        }
-
-        public void AddCrystals(int amount)
-        {
-            crystals += amount;
-            ProgressData.TotalCrystals = crystals;
-            CrystalsChanged?.Invoke(crystals);
-        }
-
-        private void Die(string reason)
+        void Die(string reason)
         {
             if (isDead) return;
             isDead = true;
-
-            var player = GetComponent<PlayerController>();
-            if (player != null) player.TriggerDeath(reason);
-            else GameManager.Instance.TriggerGameOver(reason);
+            var p = GetComponent<PlayerController>();
+            if (p != null) p.TriggerDeath(reason);
+            else GameManager.Instance?.TriggerGameOver(reason);
         }
     }
 }

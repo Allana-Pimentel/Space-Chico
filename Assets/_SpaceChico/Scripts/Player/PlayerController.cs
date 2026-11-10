@@ -3,39 +3,24 @@ using UnityEngine;
 
 namespace SpaceChico
 {
-    public enum PlayerState
-    {
-        Idle, Run, Jump, Fall, Hurt, Dead, Climbing, Celebrate
-    }
+    public enum PlayerState { Idle, Run, Jump, Fall, Hurt, Dead, Climbing, Celebrate }
 
     // Controlador do Chico estilo Super Mario (correr, pular na cabeça dos inimigos e subir cipó)
     public class PlayerController : MonoBehaviour, IDamageable
     {
-        [Header("Movimentação")]
         public float moveSpeed = 7.5f;
-
-        [Header("Pulo")]
         public float jumpForce = 13.8f;
         public float jumpCutMultiplier = 0.5f;
         public float fallGravityMultiplier = 2.2f;
 
-        [Header("Chão e Cipó")]
         public Transform groundCheck;
         public Vector2 groundCheckSize = new Vector2(0.55f, 0.12f);
         public LayerMask groundLayer;
         public float climbSpeed = 4.5f;
         public GameObject climbHintObject;
 
-        [Header("Sprites")]
         public SpriteRenderer spriteRenderer;
-        public Sprite spriteIdle;
-        public Sprite spriteRunA;
-        public Sprite spriteRunB;
-        public Sprite spriteJump;
-        public Sprite spriteFall;
-        public Sprite spriteHurt;
-        public Sprite spriteClimb;
-        public Sprite spriteCelebrate;
+        public Sprite spriteIdle, spriteRunA, spriteRunB, spriteJump, spriteFall, spriteHurt, spriteClimb, spriteCelebrate;
         public float runAnimSpeed = 0.14f;
 
         public PlayerState State { get; private set; } = PlayerState.Idle;
@@ -46,12 +31,8 @@ namespace SpaceChico
 
         private Rigidbody2D rb;
         private Collider2D mainCollider;
-        private float initialGravity;
-        private float initialScaleX;
-        private float initialScaleY;
-        private float runTimer;
+        private float initialGravity, initialScaleX, initialScaleY, runTimer, hurtTimer;
         private bool runFrame;
-        private float hurtTimer;
         private Vine activeVine;
         private Collider2D ignoredPlatform;
 
@@ -61,7 +42,6 @@ namespace SpaceChico
             mainCollider = GetComponent<Collider2D>();
             Stats = GetComponent<PlayerStats>();
             if (spriteRenderer == null) spriteRenderer = GetComponentInChildren<SpriteRenderer>();
-
             initialGravity = rb.gravityScale > 0 ? rb.gravityScale : 3.2f;
             initialScaleX = Mathf.Abs(transform.localScale.x);
             initialScaleY = transform.localScale.y;
@@ -82,24 +62,30 @@ namespace SpaceChico
         {
             if (GameManager.Instance != null && !GameManager.Instance.IsGameplayRunning) return;
             if (State == PlayerState.Dead || State == PlayerState.Celebrate) return;
-
-            if (transform.position.y < -6.5f)
-            {
-                TriggerDeath("Chico caiu no abismo!");
-                return;
-            }
+            if (transform.position.y < -6.5f) { TriggerDeath("Chico caiu no abismo!"); return; }
 
             CheckGrounded();
-
             if (State == PlayerState.Hurt)
             {
-                hurtTimer -= Time.deltaTime;
-                if (hurtTimer <= 0f) State = IsGrounded ? PlayerState.Idle : PlayerState.Fall;
+                if ((hurtTimer -= Time.deltaTime) <= 0f) State = IsGrounded ? PlayerState.Idle : PlayerState.Fall;
                 return;
             }
 
-            HandleJumpAndClimb();
-            UpdateState();
+            if (State != PlayerState.Climbing && IsGrounded && GameInput.Pressed(GameAction.Jump))
+                Jump();
+            if (GameInput.Released(GameAction.Jump) && rb.linearVelocity.y > 0f)
+                rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y * jumpCutMultiplier);
+
+            if (activeVine != null && State != PlayerState.Climbing && Mathf.Abs(GameInput.Vertical) > 0.1f)
+            {
+                if (GameInput.Vertical < -0.1f && transform.position.y >= activeVine.topY - 0.2f)
+                    transform.position = new Vector3(activeVine.transform.position.x, activeVine.topY - 0.35f, transform.position.z);
+                State = PlayerState.Climbing;
+            }
+
+            if (State != PlayerState.Climbing)
+                State = IsGrounded ? (Mathf.Abs(rb.linearVelocity.x) > 0.2f ? PlayerState.Run : PlayerState.Idle)
+                                   : (rb.linearVelocity.y > 0.1f ? PlayerState.Jump : PlayerState.Fall);
             UpdateSprite();
         }
 
@@ -108,42 +94,21 @@ namespace SpaceChico
             if (GameManager.Instance != null && !GameManager.Instance.IsGameplayRunning) return;
             if (State == PlayerState.Dead || State == PlayerState.Celebrate || State == PlayerState.Hurt) return;
 
-            if (State == PlayerState.Climbing)
-                FixedUpdateClimbing();
-            else
-                FixedUpdateMovement();
+            if (State == PlayerState.Climbing) FixedUpdateClimbing();
+            else FixedUpdateMovement();
         }
 
         void CheckGrounded()
         {
             Vector2 pos = groundCheck != null ? (Vector2)groundCheck.position : (Vector2)transform.position + Vector2.down * 0.05f;
-            Collider2D[] hits = Physics2D.OverlapBoxAll(pos, groundCheckSize, 0f, groundLayer);
-
             IsGrounded = false;
-            foreach (var hit in hits)
+            foreach (var hit in Physics2D.OverlapBoxAll(pos, groundCheckSize, 0f, groundLayer))
             {
                 if (hit != null && hit != ignoredPlatform && rb.linearVelocity.y <= 0.5f && transform.position.y >= hit.bounds.max.y - 0.22f)
                 {
                     IsGrounded = true;
                     break;
                 }
-            }
-        }
-
-        void HandleJumpAndClimb()
-        {
-            if (State != PlayerState.Climbing && IsGrounded && GameInput.Pressed(GameAction.Jump))
-                Jump();
-
-            if (GameInput.Released(GameAction.Jump) && rb.linearVelocity.y > 0f)
-                rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y * jumpCutMultiplier);
-
-            if (activeVine != null && State != PlayerState.Climbing && Mathf.Abs(GameInput.Vertical) > 0.1f)
-            {
-                if (GameInput.Vertical < -0.1f && transform.position.y >= activeVine.topY - 0.2f)
-                    transform.position = new Vector3(activeVine.transform.position.x, activeVine.topY - 0.35f, transform.position.z);
-
-                State = PlayerState.Climbing;
             }
         }
 
@@ -154,7 +119,6 @@ namespace SpaceChico
             AudioManager.Play(Sfx.Jump);
         }
 
-        // Impulso clássico estilo Mario ao pular na cabeça de um inimigo
         public void BounceFromStomp(float force)
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, force);
@@ -163,26 +127,23 @@ namespace SpaceChico
 
         void FixedUpdateMovement()
         {
-            float inputH = GameInput.Horizontal;
-            if (Mathf.Abs(inputH) > 0.05f)
+            float h = GameInput.Horizontal;
+            if (Mathf.Abs(h) > 0.05f)
             {
-                Facing = Mathf.Sign(inputH);
+                Facing = Mathf.Sign(h);
                 transform.localScale = new Vector3(initialScaleX * Facing, initialScaleY, 1f);
             }
-
             rb.gravityScale = (rb.linearVelocity.y < 0f) ? initialGravity * fallGravityMultiplier : initialGravity;
-            rb.linearVelocity = new Vector2(inputH * moveSpeed, rb.linearVelocity.y);
+            rb.linearVelocity = new Vector2(h * moveSpeed, rb.linearVelocity.y);
         }
 
         void FixedUpdateClimbing()
         {
             if (activeVine == null) { ExitClimbing(); return; }
-
             rb.gravityScale = 0f;
             SetPlatformIgnore(activeVine.platformCollider, true);
 
-            float v = GameInput.Vertical;
-            float h = GameInput.Horizontal;
+            float v = GameInput.Vertical, h = GameInput.Horizontal;
             rb.linearVelocity = new Vector2(h * moveSpeed * 0.4f, v * climbSpeed);
 
             if (v > 0.1f && transform.position.y >= activeVine.topY - 0.08f)
@@ -190,15 +151,8 @@ namespace SpaceChico
                 transform.position = new Vector3(transform.position.x, activeVine.topY + 0.04f, transform.position.z);
                 ExitClimbing();
             }
-            else if (v < -0.1f && transform.position.y <= activeVine.bottomY + 0.15f)
-            {
-                ExitClimbing();
-            }
-            else if (GameInput.Pressed(GameAction.Jump))
-            {
-                ExitClimbing();
-                Jump();
-            }
+            else if (v < -0.1f && transform.position.y <= activeVine.bottomY + 0.15f) ExitClimbing();
+            else if (GameInput.Pressed(GameAction.Jump)) { ExitClimbing(); Jump(); }
         }
 
         void ExitClimbing()
@@ -212,92 +166,52 @@ namespace SpaceChico
         void SetPlatformIgnore(Collider2D col, bool ignore)
         {
             if (mainCollider == null) return;
-            if (ignoredPlatform != null)
-            {
-                Physics2D.IgnoreCollision(mainCollider, ignoredPlatform, false);
-                ignoredPlatform = null;
-            }
-            if (ignore && col != null)
-            {
-                Physics2D.IgnoreCollision(mainCollider, col, true);
-                ignoredPlatform = col;
-            }
-        }
-
-        void UpdateState()
-        {
-            if (State == PlayerState.Climbing) return;
-            if (IsGrounded)
-                State = Mathf.Abs(rb.linearVelocity.x) > 0.2f ? PlayerState.Run : PlayerState.Idle;
-            else
-                State = rb.linearVelocity.y > 0.1f ? PlayerState.Jump : PlayerState.Fall;
+            if (ignoredPlatform != null) { Physics2D.IgnoreCollision(mainCollider, ignoredPlatform, false); ignoredPlatform = null; }
+            if (ignore && col != null) { Physics2D.IgnoreCollision(mainCollider, col, true); ignoredPlatform = col; }
         }
 
         void UpdateSprite()
         {
             if (spriteRenderer == null) return;
-            switch (State)
+            if (State == PlayerState.Run)
             {
-                case PlayerState.Idle:
-                    if (spriteIdle != null) spriteRenderer.sprite = spriteIdle;
-                    break;
-                case PlayerState.Run:
-                    runTimer += Time.deltaTime;
-                    if (runTimer >= runAnimSpeed)
-                    {
-                        runTimer = 0f;
-                        runFrame = !runFrame;
-                        spriteRenderer.sprite = runFrame ? spriteRunB : spriteRunA;
-                    }
-                    break;
-                case PlayerState.Jump:
-                    if (spriteJump != null) spriteRenderer.sprite = spriteJump;
-                    break;
-                case PlayerState.Fall:
-                    if (spriteFall != null) spriteRenderer.sprite = spriteFall;
-                    break;
-                case PlayerState.Hurt:
-                    if (spriteHurt != null) spriteRenderer.sprite = spriteHurt;
-                    break;
-                case PlayerState.Climbing:
-                    if (spriteClimb != null) spriteRenderer.sprite = spriteClimb;
-                    break;
-                case PlayerState.Celebrate:
-                    if (spriteCelebrate != null) spriteRenderer.sprite = spriteCelebrate;
-                    break;
+                if ((runTimer += Time.deltaTime) >= runAnimSpeed) { runTimer = 0f; runFrame = !runFrame; }
+                spriteRenderer.sprite = runFrame ? spriteRunB : spriteRunA;
             }
+            else if (State == PlayerState.Idle && spriteIdle) spriteRenderer.sprite = spriteIdle;
+            else if (State == PlayerState.Jump && spriteJump) spriteRenderer.sprite = spriteJump;
+            else if (State == PlayerState.Fall && spriteFall) spriteRenderer.sprite = spriteFall;
+            else if (State == PlayerState.Hurt && spriteHurt) spriteRenderer.sprite = spriteHurt;
+            else if (State == PlayerState.Climbing && spriteClimb) spriteRenderer.sprite = spriteClimb;
+            else if (State == PlayerState.Celebrate && spriteCelebrate) spriteRenderer.sprite = spriteCelebrate;
         }
 
-        public void TakeDamage(int damage, Vector2 hitDirection, GameObject damageSource)
+        public void TakeDamage(int damage, Vector2 hitDir, GameObject source)
         {
             if (State == PlayerState.Dead || Stats.IsInvulnerable) return;
-
             Stats.TakeDamage(damage);
             if (Stats.CurrentLife <= 0) return;
 
             State = PlayerState.Hurt;
             hurtTimer = 0.25f;
-            float dirX = Mathf.Abs(hitDirection.x) > 0.1f ? Mathf.Sign(hitDirection.x) : -Facing;
+            float dirX = Mathf.Abs(hitDir.x) > 0.1f ? Mathf.Sign(hitDir.x) : -Facing;
             rb.gravityScale = initialGravity;
             rb.linearVelocity = new Vector2(dirX * 6.5f, 6.0f);
             AudioManager.Play(Sfx.Hurt);
         }
 
-        void OnInvulnerabilityChanged(bool invuln)
-        {
-            if (invuln) StartCoroutine(FlashInvulnerable());
-        }
+        void OnInvulnerabilityChanged(bool invuln) { if (invuln) StartCoroutine(FlashInvulnerable()); }
 
         IEnumerator FlashInvulnerable()
         {
             while (Stats != null && Stats.IsInvulnerable)
             {
-                if (spriteRenderer != null) spriteRenderer.color = new Color(1f, 1f, 1f, 0.35f);
+                if (spriteRenderer) spriteRenderer.color = new Color(1f, 1f, 1f, 0.35f);
                 yield return new WaitForSeconds(0.08f);
-                if (spriteRenderer != null) spriteRenderer.color = Color.white;
+                if (spriteRenderer) spriteRenderer.color = Color.white;
                 yield return new WaitForSeconds(0.08f);
             }
-            if (spriteRenderer != null) spriteRenderer.color = Color.white;
+            if (spriteRenderer) spriteRenderer.color = Color.white;
         }
 
         public void TriggerCelebrate() { State = PlayerState.Celebrate; rb.linearVelocity = Vector2.zero; }
@@ -308,7 +222,7 @@ namespace SpaceChico
             State = PlayerState.Dead;
             rb.linearVelocity = Vector2.zero;
             rb.bodyType = RigidbodyType2D.Kinematic;
-            if (spriteHurt != null && spriteRenderer != null) spriteRenderer.sprite = spriteHurt;
+            if (spriteHurt && spriteRenderer) spriteRenderer.sprite = spriteHurt;
             if (GameManager.Instance != null) GameManager.Instance.TriggerGameOver(reason);
         }
 

@@ -6,12 +6,7 @@ namespace SpaceChico
     [RequireComponent(typeof(Rigidbody2D))]
     public abstract class EnemyBase : MonoBehaviour, IDamageable
     {
-        [Header("Estatísticas Básicas")]
-        public int maxHealth = 1;
-        public int currentHealth = 1;
-        public int contactDamage = 1;
-
-        [Header("Feedback Visual")]
+        public int maxHealth = 1, currentHealth = 1, contactDamage = 1;
         public SpriteRenderer spriteRenderer;
         public Color hitColor = new Color(1f, 0.4f, 0.4f, 1f);
         public Color deathColor = new Color(0.3f, 1f, 0.5f, 0.9f);
@@ -32,124 +27,65 @@ namespace SpaceChico
             if (spriteRenderer != null) originalColor = spriteRenderer.color;
             currentHealth = maxHealth;
             gameObject.tag = Layers.TagEnemy;
-
             int enemyLayer = LayerMask.NameToLayer(Layers.Enemy);
             if (enemyLayer >= 0) gameObject.layer = enemyLayer;
         }
 
         protected virtual void Update()
         {
-            if (hitFlashTimer > 0f)
-            {
-                hitFlashTimer -= Time.deltaTime;
-                if (hitFlashTimer <= 0f && spriteRenderer != null)
-                {
-                    spriteRenderer.color = originalColor;
-                }
-            }
+            if (hitFlashTimer > 0f && (hitFlashTimer -= Time.deltaTime) <= 0f && spriteRenderer != null)
+                spriteRenderer.color = originalColor;
         }
 
         protected virtual void FixedUpdate()
         {
             if (isDead || bodyCollider == null) return;
-
-            PlayerController player = GameManager.Instance != null ? GameManager.Instance.player : null;
+            PlayerController player = GameManager.Instance?.player;
             if (player == null || player.State == PlayerState.Dead) return;
 
             Bounds eb = bodyCollider.bounds;
             Vector3 pPos = player.transform.position;
-
-            // Verifica se o jogador está encostando, sobreposto ou parado em cima do inimigo
             float margemX = eb.extents.x + 0.42f;
             float dx = pPos.x - eb.center.x;
-            bool dentroX = Mathf.Abs(dx) < margemX;
-            bool dentroY = pPos.y >= eb.min.y - 0.15f && pPos.y <= eb.max.y + 0.35f;
 
-            if (dentroX && dentroY)
+            if (Mathf.Abs(dx) < margemX && pPos.y >= eb.min.y - 0.15f && pPos.y <= eb.max.y + 0.35f)
             {
-                // Se o jogador estiver caindo rápido de cima para esmagar o WeakPoint, deixa o StompFoot agir
-                bool caindoParaStomp = player.CurrentVelocity.y < -1.5f && pPos.y >= eb.max.y - 0.15f;
-                if (!caindoParaStomp)
-                {
-                    // Ataca o jogador imediatamente
-                    float dirX = Mathf.Abs(dx) > 0.05f ? Mathf.Sign(dx) : -player.Facing;
-                    Vector2 hitDir = new Vector2(dirX, 0.65f).normalized;
-                    player.TakeDamage(contactDamage, hitDir, gameObject);
-
-                    // Impede que o jogador fique parado em cima da cabeça do inimigo ou se sobreponha a ele
-                    Rigidbody2D prb = player.GetComponent<Rigidbody2D>();
-                    if (prb != null)
-                    {
-                        float alvoX = eb.center.x + dirX * (margemX + 0.08f);
-                        float novoX = Mathf.MoveTowards(pPos.x, alvoX, 14f * Time.fixedDeltaTime);
-                        player.transform.position = new Vector3(novoX, pPos.y, pPos.z);
-                        if (Mathf.Sign(prb.linearVelocity.x) != dirX || Mathf.Abs(prb.linearVelocity.x) < 4.5f)
-                        {
-                            prb.linearVelocity = new Vector2(dirX * 6.0f, Mathf.Max(prb.linearVelocity.y, 3.5f));
-                        }
-                    }
-                }
+                if (player.CurrentVelocity.y < -1.5f && pPos.y >= eb.max.y - 0.15f) return;
+                float dirX = Mathf.Abs(dx) > 0.05f ? Mathf.Sign(dx) : -player.Facing;
+                player.TakeDamage(contactDamage, new Vector2(dirX, 0.65f).normalized, gameObject);
             }
         }
 
         public virtual void TakeDamage(int damage, Vector2 hitDirection, GameObject damageSource)
         {
             if (isDead) return;
-
             currentHealth -= damage;
             FlashHit();
-
-            if (currentHealth <= 0)
-            {
-                Die();
-            }
-            else if (rb != null)
-            {
-                rb.AddForce(hitDirection * 3f, ForceMode2D.Impulse);
-            }
+            if (currentHealth <= 0) Die();
         }
 
         protected virtual void FlashHit()
         {
-            if (spriteRenderer != null)
-            {
-                spriteRenderer.color = hitColor;
-                hitFlashTimer = 0.12f;
-            }
+            if (spriteRenderer != null) { spriteRenderer.color = hitColor; hitFlashTimer = 0.12f; }
         }
 
         public abstract void Die();
 
-        protected virtual void OnCollisionEnter2D(Collision2D collision)
-        {
-            TryAttackPlayer(collision.gameObject);
-        }
-
-        protected virtual void OnCollisionStay2D(Collision2D collision)
-        {
-            TryAttackPlayer(collision.gameObject);
-        }
+        protected virtual void OnCollisionEnter2D(Collision2D c) => TryAttackPlayer(c.gameObject);
+        protected virtual void OnCollisionStay2D(Collision2D c) => TryAttackPlayer(c.gameObject);
 
         protected void TryAttackPlayer(GameObject obj)
         {
             if (isDead || obj == null) return;
+            var player = obj.GetComponent<PlayerController>() ?? obj.GetComponentInParent<PlayerController>();
+            if (player == null) return;
 
-            PlayerController player = obj.GetComponent<PlayerController>();
-            if (player == null) player = obj.GetComponentInParent<PlayerController>();
+            float topoY = bodyCollider != null ? bodyCollider.bounds.max.y : transform.position.y + 0.5f;
+            if (player.CurrentVelocity.y < -1.5f && player.transform.position.y >= topoY - 0.15f) return;
 
-            if (player != null)
-            {
-                float topoY = bodyCollider != null ? bodyCollider.bounds.max.y : transform.position.y + 0.5f;
-                if (player.CurrentVelocity.y < -1.5f && player.transform.position.y >= topoY - 0.15f)
-                {
-                    return;
-                }
-
-                float dx = player.transform.position.x - transform.position.x;
-                float dirX = Mathf.Abs(dx) > 0.05f ? Mathf.Sign(dx) : -player.Facing;
-                Vector2 hitDir = new Vector2(dirX, 0.65f).normalized;
-                player.TakeDamage(contactDamage, hitDir, gameObject);
-            }
+            float dx = player.transform.position.x - transform.position.x;
+            float dirX = Mathf.Abs(dx) > 0.05f ? Mathf.Sign(dx) : -player.Facing;
+            player.TakeDamage(contactDamage, new Vector2(dirX, 0.65f).normalized, gameObject);
         }
     }
 }
