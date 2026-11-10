@@ -2,7 +2,6 @@ using UnityEngine;
 
 namespace SpaceChico
 {
-    // Câmera 2D que acompanha o Chico dentro dos limites da fase
     public class CameraFollow : MonoBehaviour
     {
         public Transform target;

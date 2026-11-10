@@ -2,7 +2,6 @@ using UnityEngine;
 
 namespace SpaceChico
 {
-    // Fundo em paralaxe com repetição contínua de 3 painéis
     public class ParallaxLoop : MonoBehaviour
     {
         public Transform cam;

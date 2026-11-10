@@ -2,7 +2,6 @@ using UnityEngine;
 
 namespace SpaceChico
 {
-    // Configuração das Layers e Matriz de Colisão 2D do jogo
     public static class Layers
     {
         public const string Ground = "Ground";
@@ -44,7 +43,6 @@ namespace SpaceChico
 
         public static void ApplyCollisionMatrix()
         {
-            // 1. Primeiro garante que TODAS as layers principais colidam entre si (incluindo Player x Enemy!)
             for (int i = 0; i < All.Length; i++)
             {
                 int layerA = LayerMask.NameToLayer(All[i]);
@@ -59,7 +57,6 @@ namespace SpaceChico
                 }
             }
 
-            // 2. Desativa apenas os pares que não devem colidir fisicamente
             for (int i = 0; i < IgnoredPairs.GetLength(0); i++)
             {
                 int a = LayerMask.NameToLayer(IgnoredPairs[i, 0]);
@@ -69,7 +66,6 @@ namespace SpaceChico
         }
     }
 
-    // Progresso salvo entre fases
     public static class ProgressData
     {
         public static int BonusMaxLife;

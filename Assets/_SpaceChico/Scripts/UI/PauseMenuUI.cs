@@ -3,10 +3,6 @@ using UnityEngine.UI;
 
 namespace SpaceChico
 {
-    /// <summary>
-    /// Menu de Pausa.
-    /// Permite Continuar, Reiniciar ou Desistir (voltar ao menu).
-    /// </summary>
     public class PauseMenuUI : MonoBehaviour
     {
         public GameObject panelRoot;

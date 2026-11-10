@@ -3,9 +3,6 @@ using UnityEngine.UI;
 
 namespace SpaceChico
 {
-    /// <summary>
-    /// Tela de Game Over.
-    /// </summary>
     public class GameOverUI : MonoBehaviour
     {
         public GameObject panelRoot;

@@ -2,10 +2,6 @@ using UnityEngine;
 
 namespace SpaceChico
 {
-    /// <summary>
-    /// Perigo ambiental (ex.: poça de água tóxica, espinhos, plasma).
-    /// Causa dano contínuo ou instantâneo caso o jogador encoste.
-    /// </summary>
     [RequireComponent(typeof(Collider2D))]
     public class Hazard : MonoBehaviour
     {

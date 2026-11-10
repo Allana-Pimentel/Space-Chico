@@ -2,7 +2,6 @@ using UnityEngine;
 
 namespace SpaceChico
 {
-    // Peça final da nave (igual à Estrela do Mario no fim da fase)
     [RequireComponent(typeof(BoxCollider2D))]
     public class ShipPart : MonoBehaviour
     {

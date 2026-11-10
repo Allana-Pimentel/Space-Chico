@@ -7,7 +7,6 @@ namespace SpaceChico
 {
     public enum GameState { Playing, Cutscene, Paused, LevelComplete, GameOver }
 
-    // Controlador geral do fluxo do jogo (pausa, vitória, derrota e reinício da fase)
     [DefaultExecutionOrder(-100)]
     public class GameManager : MonoBehaviour
     {

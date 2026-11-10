@@ -5,7 +5,6 @@ namespace SpaceChico
 {
     public enum PlayerState { Idle, Run, Jump, Fall, Hurt, Dead, Climbing, Celebrate }
 
-    // Controlador do Chico estilo Super Mario (correr, pular na cabeça dos inimigos e subir cipó)
     public class PlayerController : MonoBehaviour, IDamageable
     {
         public float moveSpeed = 7.5f;

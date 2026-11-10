@@ -4,7 +4,6 @@ using UnityEngine.UI;
 
 namespace SpaceChico
 {
-    // HUD simples da fase: exibe apenas Vida (corações), Cristais e Guia de Controles
     public class HUD : MonoBehaviour
     {
         public PlayerStats stats;
@@ -23,7 +22,6 @@ namespace SpaceChico
             if (oxygenText != null) oxygenText.gameObject.SetActive(false);
             if (powerIcon?.transform.parent != null) powerIcon.transform.parent.gameObject.SetActive(false);
 
-            // Elemento 3: Atualiza o Guia de Controles na tela para o Estilo Mario (sem tiro/mochila)
             var guide = transform.Find("ControlsGuide")?.GetComponent<Text>();
             if (guide != null)
                 guide.text = "Setas / WASD: Mover e Subir Vinhas\nEspaço: Pular e Pisar nos Inimigos";

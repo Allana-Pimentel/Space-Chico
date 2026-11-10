@@ -2,7 +2,6 @@ using UnityEngine;
 
 namespace SpaceChico
 {
-    // Lista dos efeitos sonoros disponíveis na pasta Resources/Audio
     public enum Sfx
     {
         Jump, Land, Shoot, Empty, Stomp, Hurt, EnemyHit, EnemyDie,
@@ -11,7 +10,6 @@ namespace SpaceChico
         BossRoar, BossSlam, BossSpit
     }
 
-    // Controlador simples de som e música de fundo
     public class AudioManager : MonoBehaviour
     {
         public static AudioManager Instance;
@@ -32,11 +30,9 @@ namespace SpaceChico
             Instance = this;
             DontDestroyOnLoad(gameObject);
 
-            // Fonte de áudio para efeitos curtos
             sfxSource = gameObject.AddComponent<AudioSource>();
             sfxSource.playOnAwake = false;
 
-            // Fonte de áudio para a música de fundo em loop
             musicSource = gameObject.AddComponent<AudioSource>();
             musicSource.loop = true;
             musicSource.volume = musicVolume;
@@ -49,7 +45,6 @@ namespace SpaceChico
             }
         }
 
-        // Toca um efeito sonoro pelo nome do arquivo na pasta Resources/Audio
         public static void Play(Sfx som, float volume = 1f)
         {
             if (Instance == null || Instance.sfxSource == null) return;

@@ -2,7 +2,6 @@ using UnityEngine;
 
 namespace SpaceChico
 {
-    // Projétil de lodo disparado pelo Chefe do Pântano
     [RequireComponent(typeof(Rigidbody2D), typeof(Collider2D))]
     public class BossSpitProjectile : MonoBehaviour
     {

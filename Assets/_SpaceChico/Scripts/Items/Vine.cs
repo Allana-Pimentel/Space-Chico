@@ -2,7 +2,6 @@ using UnityEngine;
 
 namespace SpaceChico
 {
-    // Cipó escalável da fase
     [RequireComponent(typeof(Collider2D))]
     public class Vine : MonoBehaviour
     {
@@ -35,7 +34,6 @@ namespace SpaceChico
                 topY = col.bounds.max.y;
                 bottomY = col.bounds.min.y;
 
-                // Procura a plataforma logo acima do cipó para alinhar o topo exatamente com o piso dela
                 Collider2D[] hits = Physics2D.OverlapBoxAll(
                     new Vector2(transform.position.x, topY - 0.4f),
                     new Vector2(1.2f, 2.0f),

@@ -6,8 +6,6 @@ using UnityEngine.UI;
 
 namespace SpaceChico
 {
-    // Menu principal do jogo: Jogar, Controles e Sair
-    // Funciona com o mouse e também com o teclado (setas + Enter)
     public class MainMenu : MonoBehaviour
     {
         public string cenaDoJogo = "01_Pantano";
@@ -35,10 +33,8 @@ namespace SpaceChico
                 scaler.referenceResolution = new Vector2(1920, 1080);
             }
 
-            // Escurece o cenário de fundo para o texto ficar legível
             CriarPainel("Escurecer", new Color(0f, 0f, 0f, 0.45f));
 
-            // Tela principal
             painelPrincipal = CriarPainel("PainelPrincipal", Color.clear);
             CriarTexto(painelPrincipal.transform, "SPACE CHICO", 120, amarelo, new Vector2(0, 260));
             CriarTexto(painelPrincipal.transform, "O Pântano Bioluminescente", 40, Color.white, new Vector2(0, 160));
@@ -47,7 +43,6 @@ namespace SpaceChico
             CriarBotao(painelPrincipal.transform, "SAIR", new Vector2(0, -220), Sair);
             CriarTexto(painelPrincipal.transform, "Setas: escolher   |   Enter: confirmar", 26, new Color(1f, 1f, 1f, 0.7f), new Vector2(0, -420));
 
-            // Tela de controles
             painelControles = CriarPainel("PainelControles", Color.clear);
             CriarTexto(painelControles.transform, "CONTROLES", 80, amarelo, new Vector2(0, 300));
             CriarTexto(painelControles.transform,
@@ -64,11 +59,9 @@ namespace SpaceChico
 
         void Update()
         {
-            // Esc na tela de controles volta para o menu
             if (painelControles.activeSelf && Input.GetKeyDown(KeyCode.Escape))
                 MostrarMenu();
 
-            // Se o jogador clicar fora dos botões, devolve a seleção para o teclado continuar funcionando
             if (EventSystem.current != null && EventSystem.current.currentSelectedGameObject == null)
             {
                 Button padrao = painelControles.activeSelf ? botaoVoltar : botaoJogar;
@@ -108,7 +101,6 @@ namespace SpaceChico
 #endif
         }
 
-        // ---------- Funções de apoio para montar a interface ----------
 
         GameObject CriarPainel(string nome, Color cor)
         {
@@ -157,8 +149,8 @@ namespace SpaceChico
             Button botao = obj.GetComponent<Button>();
             ColorBlock cores = botao.colors;
             cores.normalColor = new Color(0.08f, 0.12f, 0.18f, 0.85f);
-            cores.highlightedColor = new Color(0.95f, 0.65f, 0.15f, 1f); // mouse em cima
-            cores.selectedColor = new Color(0.95f, 0.65f, 0.15f, 1f);    // selecionado pelo teclado
+            cores.highlightedColor = new Color(0.95f, 0.65f, 0.15f, 1f);
+            cores.selectedColor = new Color(0.95f, 0.65f, 0.15f, 1f);
             cores.pressedColor = new Color(0.7f, 0.45f, 0.1f, 1f);
             botao.colors = cores;
             botao.onClick.AddListener(acao);
@@ -169,3 +161,4 @@ namespace SpaceChico
         }
     }
 }
+

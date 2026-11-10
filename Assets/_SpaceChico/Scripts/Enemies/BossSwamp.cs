@@ -4,7 +4,6 @@ using UnityEngine;
 
 namespace SpaceChico
 {
-    // Chefe do Pântano estilo Super Mario: derrotado pulando 3 vezes na cabeça dele
     public class BossSwamp : EnemyBase
     {
         public float arenaMinX = 86f, arenaMaxX = 114f;
@@ -30,7 +29,7 @@ namespace SpaceChico
 
         protected override void Awake()
         {
-            maxHealth = 6; // 3 pulos na cabeça (2 de dano cada)
+            maxHealth = 6;
             currentHealth = 6;
             contactDamage = 1;
             base.Awake();

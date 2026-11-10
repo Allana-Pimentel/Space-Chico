@@ -4,7 +4,6 @@ namespace SpaceChico
 {
     public enum GameAction { Left, Right, Up, Down, Jump, Pause, Confirm }
 
-    // Leitura simples dos controles do teclado (Setas / WASD + Espaço + Esc)
     public static class GameInput
     {
         public static float Horizontal => (Held(GameAction.Right) ? 1f : 0f) - (Held(GameAction.Left) ? 1f : 0f);

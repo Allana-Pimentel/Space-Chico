@@ -2,7 +2,6 @@ using UnityEngine;
 
 namespace SpaceChico
 {
-    // Efeitos visuais simples (partículas básicas e texto flutuante)
     public static class VFX
     {
         static Font font;

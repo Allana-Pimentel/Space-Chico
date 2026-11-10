@@ -4,7 +4,6 @@ namespace SpaceChico
 {
     public enum SlimeState { Patrol, Chase, Dead }
 
-    // Inimigo básico estilo Goomba do Mario: patrulha e é esmagado ao pular na cabeça
     public class SlimeCrawler : EnemyBase
     {
         public float patrolSpeed = 1.8f, chaseSpeed = 3.0f;

@@ -4,7 +4,6 @@ using UnityEngine.UI;
 
 namespace SpaceChico
 {
-    // Cutscene inicial: texto inclinado estilo Star Wars + queda da nave do Chico
     public class IntroShipCutscene : MonoBehaviour
     {
         private static bool jaMostrouIntro = false;
@@ -40,7 +39,6 @@ namespace SpaceChico
 
         public static bool DeveTocarIntro() => !jaMostrouIntro;
 
-        // Chamado pelo menu ao clicar em JOGAR, para a abertura tocar de novo num jogo novo
         public static void ResetarIntro() => jaMostrouIntro = false;
 
         public void IniciarCutscene()

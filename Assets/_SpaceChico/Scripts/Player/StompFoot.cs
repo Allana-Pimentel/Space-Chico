@@ -2,11 +2,6 @@
 
 namespace SpaceChico
 {
-    /// <summary>
-    /// Colisor "Esmagador" nos pés do Chico.
-    /// Ativo quando o jogador está caindo (Fall).
-    /// Ao encostar no Ponto Fraco de um inimigo, causa 2 de dano e faz o Chico pular novamente.
-    /// </summary>
     [RequireComponent(typeof(Collider2D))]
     public class StompFoot : MonoBehaviour
     {
@@ -29,7 +24,6 @@ namespace SpaceChico
         {
             if (player == null) return;
 
-            // Só esmaga se o jogador estiver caindo (velocidade vertical < 0 ou estado Fall)
             if (player.CurrentVelocity.y > 0.5f) return;
 
             var weakPoint = other.GetComponent<WeakPoint>();

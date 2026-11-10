@@ -3,7 +3,6 @@ using UnityEngine.UI;
 
 namespace SpaceChico
 {
-    // Barra de vida do Chefe do Pântano
     public class BossHealthBarUI : MonoBehaviour
     {
         public BossSwamp boss;

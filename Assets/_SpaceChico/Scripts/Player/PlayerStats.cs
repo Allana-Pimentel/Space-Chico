@@ -3,7 +3,6 @@ using UnityEngine;
 
 namespace SpaceChico
 {
-    // Controla os pontos de vida (corações), cristais e invulnerabilidade do Chico
     public class PlayerStats : MonoBehaviour
     {
         public int baseMaxLife = 3, currentLife, maxLife, crystals;

@@ -4,11 +4,10 @@ namespace SpaceChico
 {
     public enum PickupType
     {
-        Crystal = 0,   // Pontuação (+1 cristal, igual moeda do Mario)
-        NeonFruit = 2  // Restaura +1 de vida (igual cogumelo do Mario)
+        Crystal = 0,
+        NeonFruit = 2
     }
 
-    // Item coletável da fase (Cristal ou Fruta de Vida)
     [RequireComponent(typeof(Collider2D))]
     public class Pickup : MonoBehaviour
     {

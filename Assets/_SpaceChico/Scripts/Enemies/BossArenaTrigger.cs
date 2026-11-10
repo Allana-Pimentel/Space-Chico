@@ -2,10 +2,6 @@ using UnityEngine;
 
 namespace SpaceChico
 {
-    /// <summary>
-    /// Gatilho de entrada na Arena do Chefe do Pântano.
-    /// Trava a câmera na arena, ergue a barreira de vinhas e desperta o chefe com a barra de vida.
-    /// </summary>
     [RequireComponent(typeof(Collider2D))]
     public class BossArenaTrigger : MonoBehaviour
     {
@@ -35,7 +31,6 @@ namespace SpaceChico
             {
                 triggered = true;
 
-                // Trava limites da câmera na arena
                 if (cameraFollow == null) cameraFollow = FindAnyObjectByType<CameraFollow>();
                 if (cameraFollow != null)
                 {
@@ -43,7 +38,6 @@ namespace SpaceChico
                     cameraFollow.maxX = cameraMaxX;
                 }
 
-                // Ergue a barreira atrás do jogador
                 if (arenaBarrier != null)
                 {
                     arenaBarrier.SetActive(true);
@@ -51,13 +45,11 @@ namespace SpaceChico
                     VFX.Burst(arenaBarrier.transform.position, new Color(0.8f, 0.2f, 0.4f), 15, 3f, 0.3f, 0.4f);
                 }
 
-                // Desperta o Chefe
                 if (boss != null)
                 {
                     boss.ActivateBoss();
                 }
 
-                // Exibe a barra de vida do Chefe
                 if (bossHealthBar != null)
                 {
                     bossHealthBar.Show();
