@@ -5,7 +5,7 @@ namespace SpaceChico
     public class ParallaxLoop : MonoBehaviour
     {
         public Transform cam;
-        public float parallaxFactor = 0.65f, verticalFollowFactor = 0.3f;
+        public float parallaxFactor = 0.65f, verticalFollowFactor = 0.5f;
         public SpriteRenderer[] panels;
 
         private float panelWidth;
@@ -21,8 +21,9 @@ namespace SpaceChico
             {
                 panelWidth = panels[0].bounds.size.x - 0.02f;
                 float cx = cam != null ? cam.position.x : transform.position.x;
+                float cy = cam != null ? cam.position.y : transform.position.y;
                 for (int i = 0; i < 3; i++)
-                    panels[i].transform.position = new Vector3(cx + (i - 1) * panelWidth, transform.position.y, transform.position.z);
+                    panels[i].transform.position = new Vector3(cx + (i - 1) * panelWidth, cy, transform.position.z);
             }
         }
 

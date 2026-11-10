@@ -658,7 +658,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SpaceChico.ParallaxLoop
   cam: {fileID: 1210387190}
   parallaxFactor: 0.65
-  verticalFollowFactor: 0.3
+  verticalFollowFactor: 0.5
   panels:
   - {fileID: 1232653084}
   - {fileID: 803035953}

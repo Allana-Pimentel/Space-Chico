@@ -11,6 +11,12 @@ namespace SpaceChico
 
         private float nextDamageTime;
 
+        private void Awake()
+        {
+            var sr = GetComponent<SpriteRenderer>();
+            if (sr != null && (sr.sprite == null || sr.sprite.name == "")) sr.enabled = false;
+        }
+
         private void Reset()
         {
             var col = GetComponent<Collider2D>();

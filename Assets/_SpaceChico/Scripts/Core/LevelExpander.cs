@@ -86,7 +86,11 @@ namespace SpaceChico
             float w = maxX - minX;
             go.transform.position = new Vector3((minX + maxX) * 0.5f, y, 0f);
             var sr = go.GetComponent<SpriteRenderer>();
-            if (sr != null) { sr.drawMode = SpriteDrawMode.Tiled; sr.size = new Vector2(w, h); }
+            if (sr != null)
+            {
+                if (sr.sprite != null) { sr.drawMode = SpriteDrawMode.Tiled; sr.size = new Vector2(w, h); }
+                else { sr.enabled = false; }
+            }
             var box = go.GetComponent<BoxCollider2D>();
             if (box != null) { box.size = new Vector2(w, h); if (offsetDown) box.offset = new Vector2(0f, -h * 0.5f); }
         }

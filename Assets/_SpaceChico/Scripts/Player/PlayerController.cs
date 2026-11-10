@@ -71,9 +71,17 @@ namespace SpaceChico
                 return;
             }
 
-            if (State != PlayerState.Climbing && GameInput.Pressed(GameAction.Jump))
+            if (GameInput.Pressed(GameAction.Jump))
             {
-                if (jumpsRemaining > 0)
+                if (State == PlayerState.Climbing)
+                {
+                    ExitClimbing();
+                    float jumpDir = GameInput.Horizontal;
+                    rb.linearVelocity = new Vector2(jumpDir * moveSpeed, jumpForce);
+                    State = PlayerState.Jump;
+                    AudioManager.Play(Sfx.Jump);
+                }
+                else if (jumpsRemaining > 0)
                 {
                     bool isAirJump = (jumpsRemaining < 2) || !IsGrounded;
                     jumpsRemaining--;
@@ -165,8 +173,10 @@ namespace SpaceChico
             rb.gravityScale = 0f;
             SetPlatformIgnore(activeVine.platformCollider, true);
 
-            float v = GameInput.Vertical, h = GameInput.Horizontal;
-            rb.linearVelocity = new Vector2(h * moveSpeed * 0.4f, v * climbSpeed);
+            float v = GameInput.Vertical;
+            float targetX = Mathf.MoveTowards(transform.position.x, activeVine.transform.position.x, Time.fixedDeltaTime * 6f);
+            transform.position = new Vector3(targetX, transform.position.y, transform.position.z);
+            rb.linearVelocity = new Vector2(0f, v * climbSpeed);
 
             if (v > 0.1f && transform.position.y >= activeVine.topY - 0.08f)
             {
@@ -174,7 +184,6 @@ namespace SpaceChico
                 ExitClimbing();
             }
             else if (v < -0.1f && transform.position.y <= activeVine.bottomY + 0.15f) ExitClimbing();
-            else if (GameInput.Pressed(GameAction.Jump)) { ExitClimbing(); Jump(); }
         }
 
         void ExitClimbing()
@@ -209,7 +218,7 @@ namespace SpaceChico
             else if (State == PlayerState.Climbing && spriteClimb)
             {
                 spriteRenderer.sprite = spriteClimb;
-                spriteRenderer.flipX = Mathf.Abs(GameInput.Vertical) > 0.1f && (Mathf.Sin(Time.time * 12f) > 0f);
+                spriteRenderer.flipX = false;
             }
             else if (State == PlayerState.Celebrate && spriteCelebrate) spriteRenderer.sprite = spriteCelebrate;
         }

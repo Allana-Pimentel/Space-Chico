@@ -17,7 +17,11 @@ namespace SpaceChico.Editor
                 if (scene.IsValid())
                 {
                     var player = GameObject.Find("Player_Chico");
-                    if (player != null) Selection.activeGameObject = player;
+                    if (player != null)
+                    {
+                        Selection.activeGameObject = player;
+                        SceneView.lastActiveSceneView?.FrameSelected();
+                    }
                 }
             }
         }
@@ -33,3 +37,4 @@ namespace SpaceChico.Editor
     }
 }
 #endif
+
