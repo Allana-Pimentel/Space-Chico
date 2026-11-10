@@ -58,7 +58,22 @@ namespace SpaceChico
 
         public void Heal(int amount) { if (!isDead) { currentLife = Mathf.Min(maxLife, currentLife + amount); LifeChanged?.Invoke(currentLife, maxLife); } }
         public void IncreaseMaxLife(int amount) { maxLife += amount; currentLife = Mathf.Min(maxLife, currentLife + amount); LifeChanged?.Invoke(currentLife, maxLife); }
-        public void AddCrystals(int amount) { crystals += amount; ProgressData.TotalCrystals = crystals; CrystalsChanged?.Invoke(crystals); }
+        public void AddCrystals(int amount)
+        {
+            crystals += amount;
+            ProgressData.TotalCrystals = crystals;
+            CrystalsChanged?.Invoke(crystals);
+
+            if (crystals >= 20)
+            {
+                crystals -= 20;
+                ProgressData.TotalCrystals = crystals;
+                CrystalsChanged?.Invoke(crystals);
+                Heal(1);
+                AudioManager.Play(Sfx.PowerUp);
+                VFX.PopText(transform.position + Vector3.up * 1.2f, "+1 VIDA!", new Color(0.2f, 1f, 0.4f), 1.2f);
+            }
+        }
 
         void Die(string reason)
         {

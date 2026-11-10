@@ -22,6 +22,10 @@ namespace SpaceChico
                 collected = true;
                 player.TriggerCelebrate();
 
+                if (visualObject != null) visualObject.SetActive(false);
+                var sr = GetComponent<SpriteRenderer>();
+                if (sr != null) sr.enabled = false;
+
                 AudioManager.Play(Sfx.ShipPart);
                 VFX.Burst(transform.position, glowColor, 20, 4.5f, 0.3f, 0.6f);
                 VFX.PopText(transform.position + Vector3.up, "FASE CONCLUÍDA!", glowColor, 1.2f);

@@ -86,6 +86,12 @@ namespace SpaceChico
                 State = IsGrounded ? (Mathf.Abs(rb.linearVelocity.x) > 0.2f ? PlayerState.Run : PlayerState.Idle)
                                    : (rb.linearVelocity.y > 0.1f ? PlayerState.Jump : PlayerState.Fall);
             UpdateSprite();
+
+            if (climbHintObject != null)
+            {
+                bool show = activeVine != null && State != PlayerState.Climbing && State != PlayerState.Dead && State != PlayerState.Hurt;
+                if (climbHintObject.activeSelf != show) climbHintObject.SetActive(show);
+            }
         }
 
         void FixedUpdate()

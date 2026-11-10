@@ -92,7 +92,12 @@ namespace SpaceChico
             RestartLevel();
         }
 
-        public void RestartLevel() { Time.timeScale = 1f; SceneManager.LoadScene(SceneManager.GetActiveScene().name); }
+        public void RestartLevel()
+        {
+            Time.timeScale = 1f;
+            ProgressData.TotalCrystals = 0;
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        }
         public void QuitToMenu() { Time.timeScale = 1f; SceneManager.LoadScene(menuSceneName); }
     }
 }
