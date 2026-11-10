@@ -5,13 +5,13 @@ namespace SpaceChico
     public enum PickupType
     {
         Crystal,          // Pontuação (+1 cristal)
-        Oxygen,           // Restaura barra de oxigênio
+        Oxygen,           // Cápsula bônus (+1 vida ou +5 cristais)
         NeonFruit,        // Restaura 1 de vida
-        PowerUpShield,    // Ativa e adiciona Escudo
-        PowerUpDoubleJump // Ativa e adiciona Pulo Duplo
+        PowerUpShield,    // Ativa Escudo imediatamente
+        PowerUpDoubleJump // Ativa Pulo Duplo imediatamente
     }
 
-    // Item coletável instantaneamente ao encostar
+    // Item coletável ao encostar
     [RequireComponent(typeof(Collider2D))]
     public class Pickup : MonoBehaviour
     {
@@ -34,15 +34,9 @@ namespace SpaceChico
             if (collected) return;
 
             var player = other.GetComponent<PlayerController>();
-            if (player == null)
-            {
-                player = other.GetComponentInParent<PlayerController>();
-            }
+            if (player == null) player = other.GetComponentInParent<PlayerController>();
 
-            if (player != null)
-            {
-                Collect(player);
-            }
+            if (player != null) Collect(player);
         }
 
         private void Collect(PlayerController player)
@@ -58,9 +52,9 @@ namespace SpaceChico
                     break;
 
                 case PickupType.Oxygen:
-                    player.Stats.RestoreOxygen(value > 0 ? value : 30f);
-                    AudioManager.Play(Sfx.Oxygen);
-                    VFX.PopText(transform.position, "+O2", new Color(0.2f, 0.8f, 1f), 1.0f);
+                    player.Stats.RestoreOxygen(value);
+                    AudioManager.Play(Sfx.Pickup);
+                    VFX.PopText(transform.position, "+BÔNUS", new Color(0.2f, 0.8f, 1f), 1.0f);
                     break;
 
                 case PickupType.NeonFruit:
@@ -70,36 +64,20 @@ namespace SpaceChico
                     break;
 
                 case PickupType.PowerUpShield:
-                    if (powerItemData != null && player.Inventory != null)
-                    {
-                        player.Inventory.Add(powerItemData, 1);
-                        player.Inventory.Equip(powerItemData);
-                    }
-                    if (player.Powers != null)
-                    {
-                        player.Powers.ActivateShield(15f);
-                    }
+                    if (player.Powers != null) player.Powers.ActivateShield(15f);
                     AudioManager.Play(Sfx.PowerUp);
-                    VFX.PopText(transform.position, "ESCUDO ATIVO!", burstColor, 1.1f);
+                    VFX.PopText(transform.position, "ESCUDO!", burstColor, 1.1f);
                     break;
 
                 case PickupType.PowerUpDoubleJump:
-                    if (powerItemData != null && player.Inventory != null)
-                    {
-                        player.Inventory.Add(powerItemData, 1);
-                        player.Inventory.Equip(powerItemData);
-                    }
-                    if (player.Powers != null)
-                    {
-                        player.Powers.ActivateDoubleJump(45f);
-                    }
+                    if (player.Powers != null) player.Powers.ActivateDoubleJump(45f);
                     player.EnableDoubleJump();
                     AudioManager.Play(Sfx.PowerUp);
-                    VFX.PopText(transform.position, "PULO DUPLO ATIVO!", burstColor, 1.1f);
+                    VFX.PopText(transform.position, "PULO DUPLO!", burstColor, 1.1f);
                     break;
             }
 
-            VFX.Burst(transform.position, burstColor, 14, 3.5f, 0.2f, 0.4f);
+            VFX.Burst(transform.position, burstColor, 10, 3f, 0.2f, 0.35f);
             Destroy(gameObject);
         }
     }

@@ -3,9 +3,7 @@ using UnityEngine;
 
 namespace SpaceChico
 {
-    /// <summary>
-    /// Gerencia a vida, oxigênio, pontuação e invulnerabilidade do Chico.
-    /// </summary>
+    // Controla os pontos de vida (corações), cristais e invulnerabilidade do Chico
     public class PlayerStats : MonoBehaviour
     {
         [Header("Vida")]
@@ -13,16 +11,16 @@ namespace SpaceChico
         public int currentLife;
         public int maxLife;
 
-        [Header("Oxigênio")]
+        [Header("Oxigênio (Desativado no modo Arcade)")]
         public float maxOxygen = 100f;
-        public float currentOxygen;
-        public float oxygenDrainRate = 1.2f; //perda gradual
+        public float currentOxygen = 100f;
+        public float oxygenDrainRate = 0f;
 
         [Header("Pontuação / Cristais")]
         public int crystals;
 
         [Header("Invulnerabilidade")]
-        public float invulnerabilityDuration = 1.5f; //1,5s após ser atingido
+        public float invulnerabilityDuration = 1.5f;
         public bool isInvulnerable;
 
         private float invulnerableTimer;
@@ -50,7 +48,6 @@ namespace SpaceChico
         private void Start()
         {
             LifeChanged?.Invoke(currentLife, maxLife);
-            OxygenChanged?.Invoke(currentOxygen, maxOxygen);
             CrystalsChanged?.Invoke(crystals);
         }
 
@@ -59,21 +56,6 @@ namespace SpaceChico
             if (isDead) return;
             if (GameManager.Instance != null && !GameManager.Instance.IsGameplayRunning) return;
 
-            // Drenagem contínua de Oxigênio
-            if (oxygenDrainRate > 0f)
-            {
-                currentOxygen -= oxygenDrainRate * Time.deltaTime;
-                if (currentOxygen <= 0f)
-                {
-                    currentOxygen = 0f;
-                    OxygenChanged?.Invoke(currentOxygen, maxOxygen);
-                    Die("Esgotamento total de oxigênio!");
-                    return;
-                }
-                OxygenChanged?.Invoke(currentOxygen, maxOxygen);
-            }
-
-            // Temporizador de invulnerabilidade
             if (isInvulnerable)
             {
                 invulnerableTimer -= Time.deltaTime;
@@ -125,8 +107,9 @@ namespace SpaceChico
         public void RestoreOxygen(float amount)
         {
             if (isDead) return;
-            currentOxygen = Mathf.Min(maxOxygen, currentOxygen + amount);
-            OxygenChanged?.Invoke(currentOxygen, maxOxygen);
+            // No modo Arcade sem barra de oxigênio, cápsulas recuperam 1 de vida ou dão +5 cristais
+            if (currentLife < maxLife) Heal(1);
+            else AddCrystals(5);
         }
 
         public void AddCrystals(int amount)
@@ -142,14 +125,8 @@ namespace SpaceChico
             isDead = true;
 
             var player = GetComponent<PlayerController>();
-            if (player != null)
-            {
-                player.TriggerDeath(reason);
-            }
-            else
-            {
-                GameManager.Instance.TriggerGameOver(reason);
-            }
+            if (player != null) player.TriggerDeath(reason);
+            else GameManager.Instance.TriggerGameOver(reason);
         }
     }
 }

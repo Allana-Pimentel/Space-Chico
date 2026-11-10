@@ -39,9 +39,6 @@ namespace SpaceChico
         public float LevelTime { get; private set; }
         public bool IsGameplayRunning => State == GameState.Playing;
 
-        Action pendingBackpackClosed;
-
-        // Se der Play com uma cena vazia aberta, carrega a fase principal automaticamente
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void EnsureValidScene()
         {
@@ -69,7 +66,6 @@ namespace SpaceChico
 
         void Start()
         {
-            // Na primeira vez que a fase abre, toca o vídeo/cutscene do Chico feliz na nave e caindo
             if (IntroShipCutscene.DeveTocarIntro())
             {
                 var intro = gameObject.AddComponent<IntroShipCutscene>();
@@ -89,7 +85,6 @@ namespace SpaceChico
             LevelTime += Time.deltaTime;
 
             if (GameInput.Pressed(GameAction.Pause)) Pause();
-            else if (GameInput.Pressed(GameAction.Backpack)) OpenBackpack(null, null);
         }
 
         public void SetState(GameState s)
@@ -99,7 +94,7 @@ namespace SpaceChico
             StateChanged?.Invoke(s);
         }
 
-        public static void Hitstop(float duration = 0.06f)
+        public static void Hitstop(float duration = 0.05f)
         {
             if (Instance == null || Instance.State != GameState.Playing) return;
             Instance.StartCoroutine(Instance.HitstopRoutine(duration));
@@ -109,28 +104,17 @@ namespace SpaceChico
         {
             Time.timeScale = 0.05f;
             yield return new WaitForSecondsRealtime(duration);
-            if (State == GameState.Playing)
-            {
-                Time.timeScale = 1f;
-            }
+            if (State == GameState.Playing) Time.timeScale = 1f;
         }
 
         public void OpenBackpack(ItemData highlight, Action onClosed)
         {
-            if (backpackUI == null) { onClosed?.Invoke(); return; }
-            pendingBackpackClosed = onClosed;
-            SetState(GameState.Backpack);
-            AudioManager.Play(Sfx.UiOpen);
-            backpackUI.Open(player != null ? player.Inventory : null, highlight);
+            onClosed?.Invoke();
         }
 
         public void CloseBackpack()
         {
             SetState(GameState.Playing);
-            AudioManager.Play(Sfx.UiClose);
-            var cb = pendingBackpackClosed;
-            pendingBackpackClosed = null;
-            cb?.Invoke();
         }
 
         public void Pause()
@@ -164,8 +148,6 @@ namespace SpaceChico
             AudioManager.Play(Sfx.GameOver);
 
             if (gameOverUI != null) gameOverUI.Show(reason);
-
-            // Reinicia a fase automaticamente após uma breve pausa de morte
             StartCoroutine(ReiniciarFaseAposMorte());
         }
 
