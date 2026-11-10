@@ -29,12 +29,19 @@ namespace SpaceChico
             }
             Instance = this;
             DontDestroyOnLoad(gameObject);
+            transform.position = new Vector3(0f, -500f, 0f);
 
             sfxSource = gameObject.AddComponent<AudioSource>();
             sfxSource.playOnAwake = false;
+            sfxSource.spatialBlend = 0f;
+            sfxSource.minDistance = 0f;
+            sfxSource.maxDistance = 0f;
 
             musicSource = gameObject.AddComponent<AudioSource>();
             musicSource.loop = true;
+            musicSource.spatialBlend = 0f;
+            musicSource.minDistance = 0f;
+            musicSource.maxDistance = 0f;
             musicSource.volume = musicVolume;
 
             AudioClip musica = Resources.Load<AudioClip>("Audio/AmbientMusic");
