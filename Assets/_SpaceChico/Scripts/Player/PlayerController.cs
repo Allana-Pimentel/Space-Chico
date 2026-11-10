@@ -32,6 +32,7 @@ namespace SpaceChico
         private Collider2D mainCollider;
         private float initialGravity, initialScaleX, initialScaleY, runTimer, hurtTimer;
         private bool runFrame;
+        private bool canDoubleJump;
         private Vine activeVine;
         private Collider2D ignoredPlatform;
 
@@ -70,8 +71,19 @@ namespace SpaceChico
                 return;
             }
 
-            if (State != PlayerState.Climbing && IsGrounded && GameInput.Pressed(GameAction.Jump))
-                Jump();
+            if (State != PlayerState.Climbing && GameInput.Pressed(GameAction.Jump))
+            {
+                if (IsGrounded)
+                {
+                    Jump();
+                }
+                else if (canDoubleJump)
+                {
+                    canDoubleJump = false;
+                    Jump();
+                    VFX.Burst(transform.position, new Color(0.3f, 1f, 0.85f), 12, 3.5f, 0.2f, 0.3f);
+                }
+            }
             if (GameInput.Released(GameAction.Jump) && rb.linearVelocity.y > 0f)
                 rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y * jumpCutMultiplier);
 
@@ -112,6 +124,7 @@ namespace SpaceChico
                 if (hit != null && hit != ignoredPlatform && rb.linearVelocity.y <= 0.5f && transform.position.y >= hit.bounds.max.y - 0.22f)
                 {
                     IsGrounded = true;
+                    canDoubleJump = true;
                     break;
                 }
             }
@@ -128,6 +141,7 @@ namespace SpaceChico
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, force);
             State = PlayerState.Jump;
+            canDoubleJump = true;
         }
 
         void FixedUpdateMovement()
@@ -165,6 +179,7 @@ namespace SpaceChico
             SetPlatformIgnore(null, false);
             rb.gravityScale = initialGravity;
             rb.linearVelocity = Vector2.zero;
+            canDoubleJump = true;
             State = PlayerState.Idle;
         }
 
