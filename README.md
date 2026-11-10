@@ -69,3 +69,4 @@ Assets/_SpaceChico/Scripts/
 ## 📄 Licença
 
 Projeto desenvolvido para fins educacionais e acadêmicos.
+
