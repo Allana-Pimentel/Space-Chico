@@ -16,12 +16,7 @@ namespace SpaceChico.Editor
                 var scene = EditorSceneManager.OpenScene("Assets/_SpaceChico/Scenes/01_Pantano.unity");
                 if (scene.IsValid())
                 {
-                    var player = GameObject.Find("Player_Chico");
-                    if (player != null)
-                    {
-                        Selection.activeGameObject = player;
-                        SceneView.lastActiveSceneView?.FrameSelected();
-                    }
+                    FocarNoChico();
                 }
             }
         }
@@ -32,6 +27,23 @@ namespace SpaceChico.Editor
             if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
             {
                 EditorSceneManager.OpenScene("Assets/_SpaceChico/Scenes/00_Intro.unity");
+            }
+        }
+
+        [MenuItem("Space Chico/3. Centralizar Scene View no Chico (F)", priority = 3)]
+        public static void FocarNoChico()
+        {
+            var player = GameObject.Find("Player_Chico");
+            if (player != null)
+            {
+                Selection.activeGameObject = player;
+                var sv = SceneView.lastActiveSceneView ?? (SceneView.sceneViews.Count > 0 ? (SceneView)SceneView.sceneViews[0] : null);
+                if (sv != null)
+                {
+                    sv.in2DMode = true;
+                    sv.LookAt(player.transform.position, Quaternion.identity, 8f);
+                    sv.Repaint();
+                }
             }
         }
     }
