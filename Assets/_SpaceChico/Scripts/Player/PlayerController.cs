@@ -206,10 +206,7 @@ namespace SpaceChico
             else if (State == PlayerState.Climbing && spriteClimb)
             {
                 spriteRenderer.sprite = spriteClimb;
-                if (Mathf.Abs(GameInput.Vertical) > 0.1f)
-                {
-                    spriteRenderer.flipX = Mathf.Sin(Time.time * 14f) > 0f;
-                }
+                spriteRenderer.flipX = Mathf.Abs(GameInput.Vertical) > 0.1f && (Mathf.Sin(Time.time * 12f) > 0f);
             }
             else if (State == PlayerState.Celebrate && spriteCelebrate) spriteRenderer.sprite = spriteCelebrate;
         }

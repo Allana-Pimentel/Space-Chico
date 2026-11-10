@@ -22,20 +22,34 @@ namespace SpaceChico
             if (oxygenText != null) oxygenText.gameObject.SetActive(false);
             if (powerIcon?.transform.parent != null) powerIcon.transform.parent.gameObject.SetActive(false);
 
-            var guide = transform.Find("ControlsGuide")?.GetComponent<Text>();
-            if (guide != null)
-                guide.text = "Setas / WASD: Mover e Subir Vinhas\nEspaço: Pular e Pisar nos Inimigos";
+            var guide = transform.Find("ControlsGuide") ?? transform.Find("HUD_Panel/ControlsGuide");
+            if (guide != null) guide.gameObject.SetActive(false);
 
-            if (heartsContainer?.parent != null)
+            if (heartsContainer != null && heartsContainer.parent != null)
             {
                 var card = heartsContainer.parent.GetComponent<RectTransform>();
                 if (card != null)
                 {
+                    var cardBg = card.GetComponent<Image>();
+                    if (cardBg != null) cardBg.enabled = false;
+
                     card.anchorMin = card.anchorMax = card.pivot = new Vector2(0f, 1f);
-                    card.anchoredPosition = new Vector2(20f, -20f);
-                    card.sizeDelta = new Vector2(300f, 105f);
+                    card.anchoredPosition = new Vector2(24f, -20f);
+                    card.sizeDelta = new Vector2(300f, 70f);
+
                     hpTitleLabel = card.Find("HPText")?.GetComponent<Text>();
+                    if (hpTitleLabel != null) hpTitleLabel.gameObject.SetActive(false);
+                    var pName = card.Find("PlayerName");
+                    if (pName != null) pName.gameObject.SetActive(false);
+                    var lbl = card.Find("Label");
+                    if (lbl != null) lbl.gameObject.SetActive(false);
                 }
+            }
+
+            if (crystalsText != null)
+            {
+                crystalsText.fontStyle = FontStyle.Bold;
+                crystalsText.color = new Color(1f, 0.9f, 0.2f);
             }
         }
 
@@ -74,7 +88,7 @@ namespace SpaceChico
 
         public void UpdateCrystals(int count)
         {
-            if (crystalsText != null) crystalsText.text = $"CRISTAIS: {count}";
+            if (crystalsText != null) crystalsText.text = $"CRISTAIS: {count}/10";
         }
     }
 }

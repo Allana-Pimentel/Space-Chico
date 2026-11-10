@@ -64,14 +64,23 @@ namespace SpaceChico
             ProgressData.TotalCrystals = crystals;
             CrystalsChanged?.Invoke(crystals);
 
-            if (crystals >= 20)
+            if (crystals >= 10)
             {
-                crystals -= 20;
+                crystals -= 10;
                 ProgressData.TotalCrystals = crystals;
                 CrystalsChanged?.Invoke(crystals);
-                Heal(1);
+
+                if (maxLife < 5)
+                {
+                    IncreaseMaxLife(1);
+                    VFX.PopText(transform.position + Vector3.up * 1.3f, "+1 CORACAO MAXIMO!", new Color(1f, 0.85f, 0.1f), 1.5f);
+                }
+                else
+                {
+                    Heal(1);
+                    VFX.PopText(transform.position + Vector3.up * 1.3f, "+1 VIDA!", new Color(0.2f, 1f, 0.4f), 1.2f);
+                }
                 AudioManager.Play(Sfx.PowerUp);
-                VFX.PopText(transform.position + Vector3.up * 1.2f, "+1 VIDA!", new Color(0.2f, 1f, 0.4f), 1.2f);
             }
         }
 
