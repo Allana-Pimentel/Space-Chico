@@ -176,7 +176,7 @@ namespace SpaceChico
             if (GameManager.Instance != null)
                 GameManager.Instance.SetState(GameState.Cutscene);
 
-            PlayerController player = GameManager.Instance != null ? GameManager.Instance.player : FindFirstObjectByType<PlayerController>();
+            PlayerController player = GameManager.Instance != null ? GameManager.Instance.player : FindAnyObjectByType<PlayerController>();
             Vector3 posInicialPlayer = player != null ? player.transform.position : new Vector3(-1.5f, -0.95f, 0f);
             GameObject propShip = GameObject.Find("Prop_CrashedShip");
             Vector3 posFinalShip = propShip != null ? propShip.transform.position : new Vector3(-5.2f, 2.15f, 0f);

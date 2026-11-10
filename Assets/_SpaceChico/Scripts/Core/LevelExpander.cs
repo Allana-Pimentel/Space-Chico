@@ -65,7 +65,7 @@ namespace SpaceChico
 
         private static void ShiftBossArena(float shiftX)
         {
-            foreach (Transform t in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            foreach (Transform t in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include))
             {
                 if (t == null || t.name == "Ground_66_126") continue;
                 if (t.GetComponentInParent<ParallaxLoop>() != null || t.GetComponentInParent<Canvas>() != null) continue;

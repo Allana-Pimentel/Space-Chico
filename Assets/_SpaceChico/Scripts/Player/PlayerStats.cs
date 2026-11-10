@@ -107,6 +107,7 @@ namespace SpaceChico
         public void RestoreOxygen(float amount)
         {
             if (isDead) return;
+            OxygenChanged?.Invoke(currentOxygen, maxOxygen);
             // No modo Arcade sem barra de oxigênio, cápsulas recuperam 1 de vida ou dão +5 cristais
             if (currentLife < maxLife) Heal(1);
             else AddCrystals(5);

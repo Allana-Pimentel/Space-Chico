@@ -67,7 +67,7 @@ namespace SpaceChico
             mr.sharedMaterial = UiFont.material;
             mr.sortingOrder = 80;
 
-            Destroy(go, 0.75f);
+            Object.Destroy(go, 0.75f);
         }
     }
 }
