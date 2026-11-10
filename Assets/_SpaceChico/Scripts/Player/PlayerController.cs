@@ -177,6 +177,7 @@ namespace SpaceChico
         void ExitClimbing()
         {
             SetPlatformIgnore(null, false);
+            if (spriteRenderer != null) spriteRenderer.flipX = false;
             rb.gravityScale = initialGravity;
             rb.linearVelocity = Vector2.zero;
             canDoubleJump = true;
@@ -202,7 +203,14 @@ namespace SpaceChico
             else if (State == PlayerState.Jump && spriteJump) spriteRenderer.sprite = spriteJump;
             else if (State == PlayerState.Fall && spriteFall) spriteRenderer.sprite = spriteFall;
             else if (State == PlayerState.Hurt && spriteHurt) spriteRenderer.sprite = spriteHurt;
-            else if (State == PlayerState.Climbing && spriteClimb) spriteRenderer.sprite = spriteClimb;
+            else if (State == PlayerState.Climbing && spriteClimb)
+            {
+                spriteRenderer.sprite = spriteClimb;
+                if (Mathf.Abs(GameInput.Vertical) > 0.1f)
+                {
+                    spriteRenderer.flipX = Mathf.Sin(Time.time * 14f) > 0f;
+                }
+            }
             else if (State == PlayerState.Celebrate && spriteCelebrate) spriteRenderer.sprite = spriteCelebrate;
         }
 
