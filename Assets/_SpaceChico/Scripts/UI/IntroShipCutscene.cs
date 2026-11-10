@@ -40,6 +40,9 @@ namespace SpaceChico
 
         public static bool DeveTocarIntro() => !jaMostrouIntro;
 
+        // Chamado pelo menu ao clicar em JOGAR, para a abertura tocar de novo num jogo novo
+        public static void ResetarIntro() => jaMostrouIntro = false;
+
         public void IniciarCutscene()
         {
             jaMostrouIntro = true;
